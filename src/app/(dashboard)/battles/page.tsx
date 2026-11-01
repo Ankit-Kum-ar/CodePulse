@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { AnimatePresence, motion } from "motion/react";
 import { toast } from "sonner";
 import { BattleSetup } from "@/components/battles/battle-setup";
@@ -15,8 +15,11 @@ export default function BattlesPage() {
   const [ghostBattleData, setGhostBattleData] = useState<{ p1: any, p2: any, battleType: string } | null>(null);
   const [setupUsernames, setSetupUsernames] = useState<{p1: string, p2: string, battleType: string} | null>(null);
 
+  const [isIntroFinished, setIsIntroFinished] = useState(false);
+
   const startGhostBattle = async (p1: string, p2: string, battleType: string) => {
     setSetupUsernames({ p1, p2, battleType });
+    setIsIntroFinished(false);
     setPhase("INTRO");
     
     try {
@@ -40,13 +43,15 @@ export default function BattlesPage() {
   };
 
   const handleIntroComplete = () => {
-    if (ghostBattleData) {
-      setPhase("ROUNDS");
-    } else {
-      // Data hasn't loaded yet, just wait silently.
-      setTimeout(handleIntroComplete, 500);
-    }
+    setIsIntroFinished(true);
   };
+
+  // Transition to ROUNDS only when BOTH intro animation finished AND data loaded
+  useEffect(() => {
+    if (phase === "INTRO" && isIntroFinished && ghostBattleData) {
+      setPhase("ROUNDS");
+    }
+  }, [phase, isIntroFinished, ghostBattleData]);
 
   return (
     <div className="w-full relative min-h-[calc(100vh-80px)]">
