@@ -190,7 +190,16 @@ function UserDropdown() {
     return <div className="h-8 w-8 animate-pulse rounded-full bg-white/10" />;
   }
 
-  if (!currentUser) return null;
+  if (!currentUser) {
+    return (
+      <Link
+        href="/login"
+        className="text-xs px-3 py-1.5 rounded-lg bg-primary/20 text-primary border border-primary/30 hover:bg-primary/30 transition-colors"
+      >
+        Sign in
+      </Link>
+    );
+  }
 
   return (
     <DropdownMenu>
@@ -198,9 +207,10 @@ function UserDropdown() {
         render={
           <motion.button
             id="topbar-user-dropdown"
+            aria-label={`User menu for ${currentUser.name || currentUser.username}`}
             className={cn(
               "flex items-center gap-2 rounded-xl px-2 py-1.5",
-              "transition-colors hover:bg-white/[0.06]"
+              "transition-colors hover:bg-white/[0.06] focus:outline-none focus:ring-2 focus:ring-primary/40"
             )}
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
