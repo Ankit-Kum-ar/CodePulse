@@ -10,62 +10,157 @@ permissions:
 
 jobs:
   validate-pr:
-    name: 🔍 Check NSoC Issue Assignment & Tags
+    name: 🔍 NSoC Quality Control & Compliance Check
     runs-on: ubuntu-latest
     steps:
-      - name: Validate Issue Link & Auto-Apply NSoC Labels
+      - name: Enforce NSoC'26 Quality & Labelling Rules
         uses: actions/github-script@v7
         with:
           script: |
             const pr = context.payload.pull_request;
             const body = pr.body || "";
-            const currentLabels = pr.labels.map(l => l.name.toLowerCase());
+            let currentLabels = pr.labels.map(l => (typeof l === 'string' ? l : l.name).toLowerCase());
             const labelsToAdd = [];
+            const labelsToRemove = [];
+            const violations = [];
 
-            // 1. Mandatory 'nsoc26' label
+            console.log(`Analyzing PR #${pr.number} by @${pr.user.login}...`);
+
+            // ==========================================
+            // 1. MANDATORY TAG: nsoc26
+            // ==========================================
             if (!currentLabels.includes('nsoc26')) {
               labelsToAdd.push('nsoc26');
             }
 
-            // 2. Extract linked issue number (e.g., Closes #12, Fixes #45)
+            // ==========================================
+            // 2. CHECK 0-LINE / TRIVIAL EDITS (Section 8 & 9)
+            // ==========================================
+            if (pr.changed_files === 0 || (pr.additions + pr.deletions === 0)) {
+              violations.push("❌ **0-Line Changes**: This PR has 0 line changes. NSoC rules strictly prohibit merging empty/0-line PRs (-5 point penalty for maintainers).");
+            }
+
+            // ==========================================
+            // 3. CHECK GITIGNORE COMPLIANCE / FORBIDDEN FILES
+            // ==========================================
+            const files = await github.rest.pulls.listFiles({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              pull_number: pr.number,
+              per_page: 100
+            });
+
+            const forbiddenPatterns = [
+              /^\.env(?!\.example$)/,
+              /^node_modules\//,
+              /(?:^|\/)node_modules\//,
+              /^dist\//,
+              /(?:^|\/)dist\//,
+              /(?:^|\/)\.DS_Store$/,
+              /(?:^|\/)Thumbs\.db$/,
+              /(?:^|\/)\.vscode\//,
+              /(?:^|\/)\.idea\//
+            ];
+
+            const forbiddenFiles = [];
+            let allFilesAreDocs = true;
+
+            for (const file of files.data) {
+              const filename = file.filename;
+              for (const pattern of forbiddenPatterns) {
+                if (pattern.test(filename)) {
+                  forbiddenFiles.push(filename);
+                  break;
+                }
+              }
+
+              // Check if PR only changes documentation
+              const isDoc = filename.endsWith('.md') || filename.endsWith('.txt') || filename.startsWith('.github/');
+              if (!isDoc) {
+                allFilesAreDocs = false;
+              }
+            }
+
+            if (forbiddenFiles.length > 0) {
+              violations.push(`❌ **Gitignore Violation**: Proper use of \`.gitignore\` is mandatory. The following files must be removed from the PR:\n\`\`\`\n${forbiddenFiles.slice(0, 10).join('\n')}\n\`\`\``);
+            }
+
+            // ==========================================
+            // 4. LINKED ISSUE & ASSIGNMENT CHECK
+            // ==========================================
             const issueMatch = body.match(/(?:close|closes|closed|fix|fixes|fixed|resolve|resolves|resolved)\s+#(\d+)/i);
             let detectedLevel = null;
+            let linkedIssue = null;
 
             if (issueMatch && issueMatch[1]) {
               const issueNumber = parseInt(issueMatch[1], 10);
               try {
-                const issue = await github.rest.issues.get({
+                const issueRes = await github.rest.issues.get({
                   owner: context.repo.owner,
                   repo: context.repo.repo,
                   issue_number: issueNumber
                 });
-                
-                const issueLabels = issue.data.labels.map(l => (typeof l === 'string' ? l : l.name).toLowerCase());
-                if (issueLabels.includes('level1')) detectedLevel = 'level1';
-                else if (issueLabels.includes('level2')) detectedLevel = 'level2';
-                else if (issueLabels.includes('level3')) detectedLevel = 'level3';
+                linkedIssue = issueRes.data;
 
-                console.log(`Linked issue #${issueNumber} has level: ${detectedLevel}`);
+                const issueLabels = linkedIssue.labels.map(l => (typeof l === 'string' ? l : l.name).toLowerCase());
+                if (issueLabels.includes('level3')) detectedLevel = 'level3';
+                else if (issueLabels.includes('level2')) detectedLevel = 'level2';
+                else if (issueLabels.includes('level1')) detectedLevel = 'level1';
+
+                // Check if contributor is assigned
+                const assignees = (linkedIssue.assignees || []).map(a => a.login.toLowerCase());
+                if (assignees.length > 0 && !assignees.includes(pr.user.login.toLowerCase())) {
+                  violations.push(`⚠️ **Assignment Warning**: Issue #${issueNumber} is currently assigned to @${assignees.join(', @')} instead of @${pr.user.login}. Please make sure you are officially assigned before merging.`);
+                }
               } catch (err) {
-                console.warn(`Could not fetch issue #${issueNumber}:`, err.message);
+                console.warn(`Could not fetch linked issue #${issueNumber}:`, err.message);
+              }
+            } else {
+              violations.push("❌ **Missing Linked Issue**: According to NSoC'26 guidelines, every PR must be linked to an assigned issue using `Closes #issue-number` or `Fixes #issue-number`.");
+            }
+
+            // ==========================================
+            // 5. LEVEL DETECTION & STRICT RULES
+            // ==========================================
+            if (!detectedLevel) {
+              if (/-\s*\[x\]\s*.*\bLevel\s*3\b/i.test(body)) detectedLevel = 'level3';
+              else if (/-\s*\[x\]\s*.*\bLevel\s*2\b/i.test(body)) detectedLevel = 'level2';
+              else if (/-\s*\[x\]\s*.*\bLevel\s*1\b/i.test(body)) detectedLevel = 'level1';
+            }
+
+            // Rule: README-only or doc-only edits cannot be Level 2 or Level 3
+            if (allFilesAreDocs && (detectedLevel === 'level2' || detectedLevel === 'level3')) {
+              console.log("Downgrading doc-only change from", detectedLevel, "to level1");
+              detectedLevel = 'level1';
+              violations.push("ℹ️ **Level Adjustment**: Documentation and README changes are categorized strictly as **Level 1** (3 points) per NSoC guidelines.");
+            }
+
+            // Apply exactly one Level label
+            const existingLevels = currentLabels.filter(l => ['level1', 'level2', 'level3'].includes(l));
+            
+            if (detectedLevel) {
+              if (!currentLabels.includes(detectedLevel)) {
+                labelsToAdd.push(detectedLevel);
+              }
+              // If there are other conflicting levels, remove them
+              for (const lvl of existingLevels) {
+                if (lvl !== detectedLevel) {
+                  labelsToRemove.push(lvl);
+                }
               }
             }
 
-            // 3. Fallback: Parse PR body checklist if issue has no level label
-            if (!detectedLevel) {
-              if (/-\s*\[x\]\s*.*\bLevel\s*1\b/i.test(body)) detectedLevel = 'level1';
-              else if (/-\s*\[x\]\s*.*\bLevel\s*2\b/i.test(body)) detectedLevel = 'level2';
-              else if (/-\s*\[x\]\s*.*\bLevel\s*3\b/i.test(body)) detectedLevel = 'level3';
+            // ==========================================
+            // 6. SHARED BRANCH WARNING
+            // ==========================================
+            const headRef = (pr.head && pr.head.ref) ? pr.head.ref.toLowerCase() : "";
+            if (headRef === 'main' || headRef === 'master') {
+              violations.push("⚠️ **Branch Notice**: Contributor opened PR from `" + headRef + "`. NSoC requires working on a dedicated feature branch (e.g. `feature/my-task`).");
             }
 
-            // Apply Level label if not already present
-            const hasAnyLevelLabel = currentLabels.some(l => ['level1', 'level2', 'level3'].includes(l));
-            if (detectedLevel && !hasAnyLevelLabel) {
-              labelsToAdd.push(detectedLevel);
-              console.log(`Auto-detected level: ${detectedLevel}`);
-            }
-
-            // Apply labels
+            // ==========================================
+            // 7. APPLY LABELS & REMOVE CONFLICTS
+            // ==========================================
             if (labelsToAdd.length > 0) {
               await github.rest.issues.addLabels({
                 owner: context.repo.owner,
@@ -73,30 +168,77 @@ jobs:
                 issue_number: pr.number,
                 labels: labelsToAdd
               });
-              console.log(`Added labels [${labelsToAdd.join(', ')}] to PR #${pr.number}`);
+              console.log(`Added labels [${labelsToAdd.join(', ')}]`);
             }
 
-            // 4. Warning if no linked issue found
-            if (!issueMatch) {
-              const warningComment = `👋 Hi @${pr.user.login}!\n\n` +
-                `⚠️ **NSoC 2026 Compliance Alert:**\n` +
-                `According to official **Nexus Spring of Code 2026** guidelines, every PR must be linked to an **assigned issue**.\n\n` +
-                `Please update your PR description to include your assigned issue (e.g., \`Closes #12\` or \`Fixes #12\`).\n\n` +
-                `> *Note: PRs opened without prior issue assignment cannot be merged under NSoC rules.*`;
+            for (const rem of labelsToRemove) {
+              try {
+                await github.rest.issues.removeLabel({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: pr.number,
+                  name: rem
+                });
+                console.log(`Removed conflicting label: ${rem}`);
+              } catch (e) {
+                console.warn(`Could not remove label ${rem}:`, e.message);
+              }
+            }
 
-              const comments = await github.rest.issues.listComments({
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                issue_number: pr.number
-              });
+            // ==========================================
+            // 8. COMMENT VIOLATIONS OR APPROVAL
+            // ==========================================
+            const comments = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: pr.number
+            });
 
-              const alreadyCommented = comments.data.some(c => c.body.includes("NSoC 2026 Compliance Alert"));
-              if (!alreadyCommented) {
+            const header = "### 🛡️ NSoC 2026 Quality Control Review";
+            const botComment = comments.data.find(c => c.body && c.body.includes(header));
+
+            if (violations.length > 0) {
+              const bodyMessage = `${header}\n\n` +
+                `Hello @${pr.user.login}, here is the compliance review for your pull request against **Nexus Spring of Code (NSoC) 2026** standards:\n\n` +
+                violations.map(v => `- ${v}`).join('\n\n') +
+                `\n\n---\n*Please address the points above before this PR can be merged.*`;
+
+              if (botComment) {
+                await github.rest.issues.updateComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  comment_id: botComment.id,
+                  body: bodyMessage
+                });
+              } else {
                 await github.rest.issues.createComment({
                   owner: context.repo.owner,
                   repo: context.repo.repo,
                   issue_number: pr.number,
-                  body: warningComment
+                  body: bodyMessage
+                });
+              }
+
+              // Fail the check if there are blocking violations
+              const hasBlockingViolation = violations.some(v => v.startsWith('❌'));
+              if (hasBlockingViolation) {
+                core.setFailed("PR does not meet NSoC'26 Quality Control guidelines. See comment above for details.");
+              }
+            } else {
+              const successMessage = `${header}\n\n` +
+                `🎉 **All NSoC'26 Quality Checks Passed!**\n\n` +
+                `- ✅ Linked issue verified\n` +
+                `- ✅ \`nsoc26\` and valid \`${detectedLevel || 'level'}\` label applied\n` +
+                `- ✅ \`.gitignore\` rules respected (no build/env files)\n` +
+                `- ✅ Code changes validated\n\n` +
+                `Maintainer can now proceed with final code review and merge.`;
+
+              if (botComment) {
+                await github.rest.issues.updateComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  comment_id: botComment.id,
+                  body: successMessage
                 });
               }
             }
