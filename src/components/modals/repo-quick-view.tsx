@@ -118,12 +118,13 @@ export function RepoQuickView({ repo, isOpen, onClose }: RepoQuickViewProps) {
                 <Scan className="w-4 h-4" /> Deep Analysis
               </button>
               <a 
-                href={repo.url}
+                href={repo.url || (repo.name ? `https://github.com/${repo.name}` : '#')}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-2 px-6 py-3 rounded-xl bg-white text-black font-bold hover:bg-slate-200 transition-colors w-full sm:w-auto justify-center"
+                aria-label={`Open ${repo.name} on GitHub in a new tab`}
+                className="flex items-center gap-2 px-6 py-3 rounded-xl bg-white text-black font-bold hover:bg-slate-200 transition-colors w-full sm:w-auto justify-center focus:outline-none focus:ring-2 focus:ring-white/50"
               >
-                Open in GitHub <ExternalLink className="w-4 h-4" />
+                Open in GitHub <ExternalLink className="w-4 h-4" aria-hidden="true" />
               </a>
             </div>
           </div>
