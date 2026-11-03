@@ -19,7 +19,48 @@ export default function ProfilePage() {
   const { data: user, isLoading } = useCurrentUser();
 
   if (isLoading) {
-    return <div className="flex items-center justify-center h-64 text-muted-foreground">Loading profile...</div>;
+    return (
+      <div className="space-y-6">
+        {/* Profile Header Skeleton */}
+        <div className="glass-card rounded-[20px] p-6 animate-pulse space-y-4">
+          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
+            <div className="w-24 h-24 rounded-2xl bg-white/5 shrink-0" />
+            <div className="space-y-3 flex-1 text-center sm:text-left w-full">
+              <div className="h-6 w-48 bg-white/5 rounded mx-auto sm:mx-0" />
+              <div className="h-4 w-32 bg-white/5 rounded mx-auto sm:mx-0" />
+              <div className="flex flex-wrap gap-4 justify-center sm:justify-start pt-2">
+                <div className="h-4 w-24 bg-white/5 rounded" />
+                <div className="h-4 w-28 bg-white/5 rounded" />
+                <div className="h-4 w-20 bg-white/5 rounded" />
+              </div>
+            </div>
+            <div className="w-32 h-16 rounded-xl bg-white/5 shrink-0" />
+          </div>
+        </div>
+
+        {/* Stats Grid Skeleton */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="glass-card rounded-[16px] p-4 text-center space-y-2 animate-pulse">
+              <div className="h-6 w-16 mx-auto bg-white/5 rounded" />
+              <div className="h-3 w-20 mx-auto bg-white/5 rounded" />
+            </div>
+          ))}
+        </div>
+
+        {/* Charts Skeleton */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2 glass-card rounded-[20px] p-6 h-64 animate-pulse space-y-4">
+            <div className="h-5 w-40 bg-white/5 rounded" />
+            <div className="h-44 w-full bg-white/5 rounded-xl" />
+          </div>
+          <div className="glass-card rounded-[20px] p-6 h-64 animate-pulse space-y-4">
+            <div className="h-5 w-36 bg-white/5 rounded" />
+            <div className="h-44 w-full bg-white/5 rounded-xl" />
+          </div>
+        </div>
+      </div>
+    );
   }
 
   if (!user) {
