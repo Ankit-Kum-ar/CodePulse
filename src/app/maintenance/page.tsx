@@ -5,27 +5,29 @@ import { Wrench, Clock, RefreshCw } from "lucide-react";
 import { useEffect, useState } from "react";
 
 export default function MaintenancePage() {
+  const [targetTime] = useState(() => Date.now() + (2 * 60 + 30) * 60 * 1000);
   const [timeLeft, setTimeLeft] = useState({ hours: 2, minutes: 30, seconds: 0 });
 
   useEffect(() => {
+    const calculateTimeLeft = () => {
+      const difference = targetTime - Date.now();
+      if (difference <= 0) {
+        return { hours: 0, minutes: 0, seconds: 0 };
+      }
+      const hours = Math.floor(difference / (1000 * 60 * 60));
+      const minutes = Math.floor((difference % (1000 * 60 * 60)) / (1000 * 60));
+      const seconds = Math.floor((difference % (1000 * 60)) / 1000);
+      return { hours, minutes, seconds };
+    };
+
+    setTimeLeft(calculateTimeLeft());
+
     const timer = setInterval(() => {
-      setTimeLeft((prev) => {
-        let { hours, minutes, seconds } = prev;
-        if (seconds > 0) {
-          seconds--;
-        } else if (minutes > 0) {
-          minutes--;
-          seconds = 59;
-        } else if (hours > 0) {
-          hours--;
-          minutes = 59;
-          seconds = 59;
-        }
-        return { hours, minutes, seconds };
-      });
+      setTimeLeft(calculateTimeLeft());
     }, 1000);
+
     return () => clearInterval(timer);
-  }, []);
+  }, [targetTime]);
 
   const pad = (n: number) => n.toString().padStart(2, "0");
 
@@ -124,9 +126,10 @@ export default function MaintenancePage() {
           animate={{ opacity: 1 }}
           transition={{ delay: 0.8 }}
           onClick={() => window.location.reload()}
-          className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-white/5 border border-white/10 text-sm font-medium hover:bg-white/10 transition-colors"
+          aria-label="Refresh maintenance status page"
+          className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-white/5 border border-white/10 text-sm font-medium hover:bg-white/10 transition-colors focus:outline-none focus:ring-2 focus:ring-amber-500/50"
         >
-          <RefreshCw className="w-4 h-4" />
+          <RefreshCw className="w-4 h-4" aria-hidden="true" />
           Refresh Page
         </motion.button>
       </div>
