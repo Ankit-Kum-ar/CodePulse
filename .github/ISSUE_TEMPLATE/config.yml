@@ -1,0 +1,9 @@
+blank_issues_enabled: false
+contact_links:
+  - name: 💬 NSoC 2026 Discord Server
+    url: https://discord.gg/cUDnU9dup
+    about: Join the official Nexus Spring of Code Discord community for quick questions & announcements.
+  - name: 📖 NSoC Guidelines & Rules
+    url: https://nsoc.in/
+    about: Read the official rules, timeline, point calculations, and FAQs.
+

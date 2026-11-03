@@ -1,0 +1,68 @@
+[
+  {
+    "name": "nsoc26",
+    "color": "6f42c1",
+    "description": "Mandatory tag: Nexus Spring of Code 2026 issue/PR"
+  },
+  {
+    "name": "level1",
+    "color": "0e8a16",
+    "description": "NSoC'26 (3 Pts): Documentation, typo fixes, small tweaks"
+  },
+  {
+    "name": "level2",
+    "color": "fbca04",
+    "description": "NSoC'26 (5 Pts): UI & Frontend work, layouts, styling, components"
+  },
+  {
+    "name": "level3",
+    "color": "d93f0b",
+    "description": "NSoC'26 (10 Pts): Core logic, database, backend APIs, complex features"
+  },
+  {
+    "name": "good first issue",
+    "color": "7057ff",
+    "description": "Good for newcomers"
+  },
+  {
+    "name": "help wanted",
+    "color": "008672",
+    "description": "Extra attention is needed"
+  },
+  {
+    "name": "bug",
+    "color": "d73a4a",
+    "description": "Something isn't working"
+  },
+  {
+    "name": "feature",
+    "color": "a2eeef",
+    "description": "New feature or enhancement proposal"
+  },
+  {
+    "name": "documentation",
+    "color": "0075ca",
+    "description": "Improvements or additions to documentation"
+  },
+  {
+    "name": "frontend",
+    "color": "bfdadc",
+    "description": "Related to Next.js frontend code (src/)"
+  },
+  {
+    "name": "backend",
+    "color": "1d76db",
+    "description": "Related to NestJS backend code (backend/)"
+  },
+  {
+    "name": "stale",
+    "color": "cfd3d7",
+    "description": "Inactive for 7 days or more"
+  },
+  {
+    "name": "assigned",
+    "color": "c2e0c6",
+    "description": "Officially assigned to an active contributor"
+  }
+]
+

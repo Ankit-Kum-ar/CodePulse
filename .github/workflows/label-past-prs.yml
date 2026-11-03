@@ -1,0 +1,84 @@
+name: 🏷️ Retroactive Labeler for Merged PRs
+
+on:
+  workflow_dispatch: # Run manually with 1 click from GitHub Actions tab
+
+permissions:
+  pull-requests: write
+  issues: write
+
+jobs:
+  label-past-prs:
+    name: 🔄 Retroactively Label Past Merged PRs
+    runs-on: ubuntu-latest
+    steps:
+      - name: Process Closed & Merged PRs
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+
+            console.log(`Fetching closed PRs for ${owner}/${repo}...`);
+            const pulls = await github.rest.pulls.list({
+              owner,
+              repo,
+              state: 'closed',
+              per_page: 50
+            });
+
+            console.log(`Found ${pulls.data.length} closed PRs.`);
+
+            for (const pr of pulls.data) {
+              if (!pr.merged_at) {
+                console.log(`Skipping unmerged PR #${pr.number}`);
+                continue;
+              }
+
+              const currentLabels = pr.labels.map(l => l.name.toLowerCase());
+              const labelsToAdd = [];
+
+              // Always ensure 'nsoc26' is present
+              if (!currentLabels.includes('nsoc26')) {
+                labelsToAdd.push('nsoc26');
+              }
+
+              // Check if any level label already exists
+              const hasLevel = currentLabels.some(l => ['level1', 'level2', 'level3'].includes(l));
+              if (!hasLevel) {
+                const title = (pr.title + ' ' + (pr.head ? pr.head.ref : '')).toLowerCase();
+                
+                // Intelligently classify past PRs based on title / branch
+                if (title.includes('doc') || title.includes('readme') || title.includes('typo')) {
+                  labelsToAdd.push('level1');
+                } else if (
+                  title.includes('challenge') || 
+                  title.includes('maintenance') || 
+                  title.includes('settings') || 
+                  title.includes('topbar') || 
+                  title.includes('sidebar') || 
+                  title.includes('contrast') || 
+                  title.includes('avatar') || 
+                  title.includes('ui') ||
+                  title.includes('skeleton')
+                ) {
+                  labelsToAdd.push('level2');
+                } else {
+                  // Default frontend/UI enhancement
+                  labelsToAdd.push('level2');
+                }
+              }
+
+              if (labelsToAdd.length > 0) {
+                console.log(`Tagging Merged PR #${pr.number} (${pr.title}) with [${labelsToAdd.join(', ')}]`);
+                await github.rest.issues.addLabels({
+                  owner,
+                  repo,
+                  issue_number: pr.number,
+                  labels: labelsToAdd
+                });
+              } else {
+                console.log(`PR #${pr.number} already has all required labels.`);
+              }
+            }
+            console.log("Retroactive labelling complete!");

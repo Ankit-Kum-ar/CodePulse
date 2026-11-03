@@ -1,0 +1,61 @@
+name: 🏷️ Sync Repository Labels
+
+on:
+  push:
+    paths:
+      - '.github/labels.json'
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  issues: write
+
+jobs:
+  sync-labels:
+    name: 🎨 Sync NSoC & Project Labels
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Create or Update Labels
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const labels = JSON.parse(fs.readFileSync('.github/labels.json', 'utf8'));
+
+            // Fetch existing labels
+            const existingLabels = await github.rest.issues.listLabelsForRepo({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              per_page: 100
+            });
+            const existingMap = new Map(existingLabels.data.map(l => [l.name.toLowerCase(), l]));
+
+            for (const label of labels) {
+              const existing = existingMap.get(label.name.toLowerCase());
+              if (existing) {
+                console.log(`Updating label: ${label.name}`);
+                await github.rest.issues.updateLabel({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  name: existing.name,
+                  new_name: label.name,
+                  color: label.color,
+                  description: label.description
+                });
+              } else {
+                console.log(`Creating label: ${label.name}`);
+                await github.rest.issues.createLabel({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  name: label.name,
+                  color: label.color,
+                  description: label.description
+                });
+              }
+            }
+            console.log("All NSoC & project labels successfully synchronized!");
+

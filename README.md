@@ -1,3 +1,29 @@
+# ⚔️ CodePulse (DevBattle)
+
+[![Nexus Spring of Code 2026](https://img.shields.io/badge/Nexus_Spring_of_Code-2026_Winter_Edition-blueviolet?style=for-the-badge&logo=github)](https://nsoc.in/)
+[![NSoC'26 Level 1](https://img.shields.io/badge/NSoC'26-Level_1_(3_Pts)-green?style=for-the-badge)](https://nsoc.in/)
+[![NSoC'26 Level 2](https://img.shields.io/badge/NSoC'26-Level_2_(5_Pts)-yellow?style=for-the-badge)](https://nsoc.in/)
+[![NSoC'26 Level 3](https://img.shields.io/badge/NSoC'26-Level_3_(10_Pts)-red?style=for-the-badge)](https://nsoc.in/)
+
+> 🌟 **Official Participant in Nexus Spring of Code (NSoC / NWoC) 2026 — Winter Edition**  
+> A 45-day open-source program where maintainers and contributors collaborate to build real-world software.  
+> 📖 **Program Timeline:** 19 Oct – 02 Dec 2026 | 🔗 **Official Portal:** [nsoc.in](https://www.nsoc.in/) | 💬 **Community:** [NSoC Discord Server](https://discord.gg/cUDnU9dup)
+
+---
+
+### 🏆 Nexus Spring of Code (NSoC 2026) Points Structure
+
+| Label | Points | Scope / Used For |
+|:---|:---:|:---|
+| **`nsoc26`** | Mandatory | **Every** NSoC issue and PR must carry this tag |
+| **`level1`** | **3 Pts** | Documentation, typo fixes, small UI/style tweaks |
+| **`level2`** | **5 Pts** | UI & Frontend components, layouts, responsive design, charts |
+| **`level3`** | **10 Pts** | Core business logic, backend APIs, database schema, complex features |
+
+> ⚠️ **NSoC Guidelines:** Every contributor must be officially **assigned** to an issue before opening a PR. PRs opened without prior assignment will be closed. Please read [`CONTRIBUTING.md`](./CONTRIBUTING.md) before starting!
+
+---
+
 # 📖 CodePulse (DevBattle) — Complete Project Architecture Document
 
 > **Version:** 1.0 | **Last Updated:** July 2026  

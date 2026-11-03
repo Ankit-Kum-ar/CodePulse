@@ -3,16 +3,18 @@
 import { motion } from "motion/react";
 import Link from "next/link";
 import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Mail, Lock, Eye, EyeOff, ArrowRight, Loader2 } from "lucide-react";
 import { GithubIcon } from "@/components/icons/github";
 import { toast } from "sonner";
+import { createClient } from "@/lib/supabase/client";
 
 const loginSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
-  password: z.string().min(8, "Password must be at least 8 characters"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
 });
 
 type LoginForm = z.infer<typeof loginSchema>;
@@ -20,6 +22,9 @@ type LoginForm = z.infer<typeof loginSchema>;
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isGithubLoading, setIsGithubLoading] = useState(false);
+  const router = useRouter();
+  const searchParams = useSearchParams();
 
   const {
     register,
@@ -31,12 +36,49 @@ export default function LoginPage() {
 
   const onSubmit = async (data: LoginForm) => {
     setIsLoading(true);
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    setIsLoading(false);
-    toast.success("Welcome back!", {
-      description: `Logged in as ${data.email}`,
-    });
+    try {
+      const supabase = createClient();
+      const { error } = await supabase.auth.signInWithPassword({
+        email: data.email,
+        password: data.password,
+      });
+
+      if (error) {
+        toast.error(error.message);
+        return;
+      }
+
+      toast.success("Welcome back!");
+      const redirectTo = searchParams.get("redirectTo") || "/dashboard";
+      router.push(redirectTo);
+      router.refresh();
+    } catch (err: any) {
+      toast.error(err.message || "Failed to sign in");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleGithubSignIn = async () => {
+    setIsGithubLoading(true);
+    try {
+      const supabase = createClient();
+      const redirectTo = searchParams.get("redirectTo") || "/dashboard";
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "github",
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback?next=${encodeURIComponent(redirectTo)}`,
+        },
+      });
+
+      if (error) {
+        toast.error(error.message);
+        setIsGithubLoading(false);
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Failed to start GitHub login");
+      setIsGithubLoading(false);
+    }
   };
 
   return (
@@ -137,14 +179,20 @@ export default function LoginPage() {
             Sign in to your account to continue
           </p>
 
-          {/* GitHub OAuth */}
-          <a
-            href={`https://github.com/login/oauth/authorize?client_id=${process.env.NEXT_PUBLIC_GITHUB_CLIENT_ID || 'Ov23li67nrFzRKyBzGVB'}`}
-            className="w-full flex items-center justify-center gap-3 px-6 py-3.5 rounded-xl bg-white text-black font-medium hover:bg-gray-100 transition-colors mb-6"
+          {/* GitHub OAuth Button */}
+          <button
+            type="button"
+            onClick={handleGithubSignIn}
+            disabled={isGithubLoading}
+            className="w-full flex items-center justify-center gap-3 px-6 py-3.5 rounded-xl bg-white text-black font-medium hover:bg-gray-100 transition-colors mb-6 disabled:opacity-50"
           >
-            <GithubIcon className="w-5 h-5" />
+            {isGithubLoading ? (
+              <Loader2 className="w-5 h-5 animate-spin" />
+            ) : (
+              <GithubIcon className="w-5 h-5" />
+            )}
             Continue with GitHub
-          </a>
+          </button>
 
           {/* Divider */}
           <div className="flex items-center gap-3 mb-6">
@@ -198,40 +246,40 @@ export default function LoginPage() {
                 >
                   {showPassword ? (
                     <EyeOff className="w-4 h-4" />
-                    ) : (
-                      <Eye className="w-4 h-4" />
-                    )}
-                  </button>
-                </div>
-                {errors.password && (
-                  <p className="text-xs text-red-400 mt-1.5">{errors.password.message}</p>
-                )}
+                  ) : (
+                    <Eye className="w-4 h-4" />
+                  )}
+                </button>
               </div>
+              {errors.password && (
+                <p className="text-xs text-red-400 mt-1.5">{errors.password.message}</p>
+              )}
+            </div>
 
-              <button
-                type="submit"
-                disabled={isLoading}
-                className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-medium transition-all disabled:opacity-50 mt-4"
-              >
-                {isLoading ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                ) : (
-                  <>
-                    Sign In
-                    <ArrowRight className="w-4 h-4" />
-                  </>
-                )}
-              </button>
-            </form>
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-medium transition-all disabled:opacity-50 mt-4 cursor-pointer"
+            >
+              {isLoading ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <>
+                  Sign In
+                  <ArrowRight className="w-4 h-4" />
+                </>
+              )}
+            </button>
+          </form>
 
-            <p className="mt-8 text-center text-sm text-muted-foreground">
-              Don't have an account?{" "}
-              <Link href="/signup" className="text-blue-500 hover:text-blue-400 font-medium transition-colors">
-                Sign up
-              </Link>
-            </p>
-          </motion.div>
-        </div>
+          <p className="mt-8 text-center text-sm text-muted-foreground">
+            Don't have an account?{" "}
+            <Link href="/signup" className="text-blue-500 hover:text-blue-400 font-medium transition-colors">
+              Sign up
+            </Link>
+          </p>
+        </motion.div>
       </div>
+    </div>
   );
 }

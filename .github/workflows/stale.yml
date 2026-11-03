@@ -1,0 +1,32 @@
+name: 🧹 Stale Issues & PRs Manager
+
+on:
+  schedule:
+    - cron: '30 1 * * *' # Runs daily at 01:30 UTC
+  workflow_dispatch:
+
+permissions:
+  issues: write
+  pull-requests: write
+
+jobs:
+  stale:
+    name: ⏳ Check Inactive Issues & PRs
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/stale@v9
+        with:
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          days-before-issue-stale: 7
+          days-before-pr-stale: 7
+          days-before-issue-close: 3
+          days-before-pr-close: 3
+          stale-issue-message: |
+            👋 Hi! This issue has had no activity for **7 days**. Under **NSoC 2026** guidelines, if there is no update within the next 3 days, it may be unassigned and made available for other contributors.
+          stale-pr-message: |
+            👋 Hi! This pull request has had no activity for **7 days**. Please push your updates or let us know if you need assistance, otherwise it will be closed automatically in 3 days.
+          stale-issue-label: 'stale'
+          stale-pr-label: 'stale'
+          exempt-issue-labels: 'pinned,in-progress,security'
+          exempt-pr-labels: 'in-progress,work-in-progress'
+

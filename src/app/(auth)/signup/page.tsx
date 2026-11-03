@@ -3,6 +3,7 @@
 import { motion } from "motion/react";
 import Link from "next/link";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -19,6 +20,7 @@ import {
 } from "lucide-react";
 import { GithubIcon } from "@/components/icons/github";
 import { toast } from "sonner";
+import { createClient } from "@/lib/supabase/client";
 
 const signupSchema = z
   .object({
@@ -44,7 +46,9 @@ export default function SignupPage() {
   const [currentStep, setCurrentStep] = useState(1);
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isGithubLoading, setIsGithubLoading] = useState(false);
   const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
+  const router = useRouter();
 
   const {
     register,
@@ -60,16 +64,53 @@ export default function SignupPage() {
   ];
 
   const onSubmit = async (data: SignupForm) => {
-    if (currentStep < 3) {
-      setCurrentStep(currentStep + 1);
-      return;
-    }
     setIsLoading(true);
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-    setIsLoading(false);
-    toast.success("Account created!", {
-      description: `Welcome to DevBattle, ${data.name}!`,
-    });
+    try {
+      const supabase = createClient();
+      const { error } = await supabase.auth.signUp({
+        email: data.email,
+        password: data.password,
+        options: {
+          data: {
+            full_name: data.name,
+          },
+          emailRedirectTo: `${window.location.origin}/auth/callback`,
+        },
+      });
+
+      if (error) {
+        toast.error(error.message);
+        return;
+      }
+
+      toast.success("Account created successfully!");
+      setCurrentStep(2);
+    } catch (err: any) {
+      toast.error(err.message || "Failed to create account");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleGithubSignUp = async () => {
+    setIsGithubLoading(true);
+    try {
+      const supabase = createClient();
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: "github",
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback?next=/dashboard`,
+        },
+      });
+
+      if (error) {
+        toast.error(error.message);
+        setIsGithubLoading(false);
+      }
+    } catch (err: any) {
+      toast.error(err.message || "Failed to authorize GitHub");
+      setIsGithubLoading(false);
+    }
   };
 
   return (
@@ -181,16 +222,19 @@ export default function SignupPage() {
                 Enter your details to get started
               </p>
 
-              <motion.button
-                whileHover={{ scale: 1.01 }}
-                whileTap={{ scale: 0.99 }}
+              <button
                 type="button"
-                onClick={() => setCurrentStep(2)}
-                className="w-full flex items-center justify-center gap-3 px-6 py-3.5 rounded-xl bg-white text-black font-medium hover:bg-gray-100 transition-colors mb-6"
+                onClick={handleGithubSignUp}
+                disabled={isGithubLoading}
+                className="w-full flex items-center justify-center gap-3 px-6 py-3.5 rounded-xl bg-white text-black font-medium hover:bg-gray-100 transition-colors mb-6 disabled:opacity-50"
               >
-                <GithubIcon className="w-5 h-5" />
+                {isGithubLoading ? (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                ) : (
+                  <GithubIcon className="w-5 h-5" />
+                )}
                 Continue with GitHub
-              </motion.button>
+              </button>
 
               <div className="flex items-center gap-3 mb-6">
                 <div className="flex-1 h-px bg-white/10" />
@@ -262,15 +306,20 @@ export default function SignupPage() {
                   {errors.confirmPassword && <p className="text-xs text-red-400 mt-1.5">{errors.confirmPassword.message}</p>}
                 </div>
 
-                <motion.button
+                <button
                   type="submit"
-                  whileHover={{ scale: 1.01 }}
-                  whileTap={{ scale: 0.99 }}
-                  className="w-full flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-gradient-to-r from-purple-600 to-blue-600 text-white font-medium"
+                  disabled={isLoading}
+                  className="w-full flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl bg-gradient-to-r from-purple-600 to-blue-600 text-white font-medium disabled:opacity-50"
                 >
-                  Continue
-                  <ArrowRight className="w-4 h-4" />
-                </motion.button>
+                  {isLoading ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <>
+                      Continue
+                      <ArrowRight className="w-4 h-4" />
+                    </>
+                  )}
+                </button>
               </form>
             </motion.div>
           )}
@@ -295,15 +344,18 @@ export default function SignupPage() {
                   We&apos;ll access your public profile, repositories, and contribution data.
                   We never modify your code or settings.
                 </p>
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => setCurrentStep(3)}
-                  className="px-8 py-3 rounded-xl bg-white text-black font-medium inline-flex items-center gap-2"
+                <button
+                  onClick={handleGithubSignUp}
+                  disabled={isGithubLoading}
+                  className="px-8 py-3 rounded-xl bg-white text-black font-medium inline-flex items-center gap-2 hover:bg-gray-100 transition-colors disabled:opacity-50"
                 >
-                  <GithubIcon className="w-5 h-5" />
+                  {isGithubLoading ? (
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                  ) : (
+                    <GithubIcon className="w-5 h-5" />
+                  )}
                   Authorize GitHub
-                </motion.button>
+                </button>
               </div>
 
               <div className="flex gap-3">
@@ -337,10 +389,9 @@ export default function SignupPage() {
 
               <div className="flex flex-wrap gap-2 mb-8">
                 {interests.map((interest) => (
-                  <motion.button
+                  <button
                     key={interest}
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
+                    type="button"
                     onClick={() =>
                       setSelectedInterests((prev) =>
                         prev.includes(interest)
@@ -355,40 +406,30 @@ export default function SignupPage() {
                     }`}
                   >
                     {interest}
-                  </motion.button>
+                  </button>
                 ))}
               </div>
 
               <div className="flex gap-3">
                 <button
+                  type="button"
                   onClick={() => setCurrentStep(2)}
                   className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 text-sm hover:bg-white/10 transition-colors"
                 >
                   <ArrowLeft className="w-4 h-4" />
                   Back
                 </button>
-                <motion.button
-                  whileHover={{ scale: 1.01 }}
-                  whileTap={{ scale: 0.99 }}
-                  disabled={isLoading}
+                <button
+                  type="button"
                   onClick={() => {
-                    setIsLoading(true);
-                    setTimeout(() => {
-                      setIsLoading(false);
-                      toast.success("Welcome to DevBattle! 🎉");
-                    }, 1500);
+                    toast.success("Welcome to DevBattle! 🎉");
+                    router.push("/dashboard");
                   }}
-                  className="flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-blue-600 text-white font-medium disabled:opacity-50"
+                  className="flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-blue-600 text-white font-medium"
                 >
-                  {isLoading ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <>
-                      Get Started
-                      <ArrowRight className="w-4 h-4" />
-                    </>
-                  )}
-                </motion.button>
+                  Get Started
+                  <ArrowRight className="w-4 h-4" />
+                </button>
               </div>
             </motion.div>
           )}
