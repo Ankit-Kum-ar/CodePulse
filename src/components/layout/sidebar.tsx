@@ -295,7 +295,15 @@ function UserSection({ collapsed }: { collapsed: boolean }) {
           isActive={false}
           collapsed={collapsed}
         />
-        <button onClick={() => logout()} className="w-full">
+        <button
+          type="button"
+          onClick={(e) => {
+            e.preventDefault();
+            logout();
+          }}
+          className="w-full text-left"
+          aria-label="Log out of application"
+        >
           <NavItemLink
             title="Log Out"
             href="#"
