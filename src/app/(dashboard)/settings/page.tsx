@@ -97,24 +97,28 @@ export default function SettingsPage() {
       </div>
 
       <div className="flex flex-col lg:flex-row gap-6">
-        {/* Sidebar */}
+        {/* Settings Navigation */}
         <div className="lg:w-56 shrink-0">
-          <div className="glass-card rounded-[20px] p-2 space-y-0.5">
+          <div role="tablist" aria-label="Settings sections" className="glass-card rounded-[20px] p-2 flex lg:flex-col overflow-x-auto gap-1 lg:gap-0.5 scrollbar-none">
             {sections.map((section) => {
               const Icon = section.icon;
               return (
                 <button
                   key={section.id}
+                  role="tab"
+                  aria-selected={activeSection === section.id}
+                  aria-controls={`panel-${section.id}`}
+                  id={`tab-${section.id}`}
                   onClick={() => setActiveSection(section.id)}
                   className={cn(
-                    "flex items-center gap-2.5 w-full px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all",
+                    "flex items-center gap-2.5 shrink-0 lg:w-full px-3.5 py-2.5 rounded-xl text-sm font-medium transition-all focus:outline-none focus:ring-2 focus:ring-primary/40",
                     activeSection === section.id
-                      ? "bg-primary text-primary-foreground"
+                      ? "bg-primary text-primary-foreground shadow-sm"
                       : "text-muted-foreground hover:text-foreground hover:bg-white/5"
                   )}
                 >
-                  <Icon className="w-4 h-4" />
-                  {section.label}
+                  <Icon className="w-4 h-4 shrink-0" aria-hidden="true" />
+                  <span>{section.label}</span>
                 </button>
               );
             })}
