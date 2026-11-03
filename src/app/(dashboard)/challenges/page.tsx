@@ -46,7 +46,44 @@ export default function ChallengesPage() {
   const completed = filtered.filter((c: any) => c.isCompleted);
 
   if (isLoading) {
-    return <div className="p-8 text-center text-muted-foreground">Loading challenges...</div>;
+    return (
+      <div className="space-y-6">
+        <div className="space-y-2">
+          <div className="h-8 w-48 bg-white/5 rounded-lg animate-pulse" />
+          <div className="h-4 w-72 bg-white/5 rounded-lg animate-pulse" />
+        </div>
+
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="glass-card rounded-[16px] p-4 text-center space-y-2 animate-pulse">
+              <div className="h-7 w-16 mx-auto bg-white/5 rounded" />
+              <div className="h-3 w-20 mx-auto bg-white/5 rounded" />
+            </div>
+          ))}
+        </div>
+
+        <div className="h-10 w-80 bg-white/5 rounded-xl animate-pulse" />
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="glass-card rounded-[20px] p-5 h-44 animate-pulse space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-white/5" />
+                  <div className="space-y-2">
+                    <div className="h-4 w-32 bg-white/5 rounded" />
+                    <div className="h-3 w-20 bg-white/5 rounded" />
+                  </div>
+                </div>
+                <div className="h-6 w-16 bg-white/5 rounded-full" />
+              </div>
+              <div className="h-3 w-full bg-white/5 rounded" />
+              <div className="h-2 w-full bg-white/5 rounded" />
+            </div>
+          ))}
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -126,6 +163,18 @@ export default function ChallengesPage() {
               </StaggerItem>
             ))}
           </StaggerContainer>
+        </div>
+      )}
+
+      {active.length === 0 && completed.length === 0 && (
+        <div className="glass-card rounded-[20px] p-12 text-center border border-white/5 space-y-3">
+          <div className="w-12 h-12 rounded-2xl bg-white/5 mx-auto flex items-center justify-center text-muted-foreground">
+            <Target className="w-6 h-6" />
+          </div>
+          <h3 className="text-base font-semibold">No challenges found</h3>
+          <p className="text-sm text-muted-foreground max-w-sm mx-auto">
+            There are no challenges under the &quot;{tabs.find(t => t.id === activeTab)?.label}&quot; category at this moment. Check back soon!
+          </p>
         </div>
       )}
     </div>
