@@ -771,7 +771,7 @@ CodePulse/
 └── backend/                            # NestJS Backend (separate app)
     ├── .env                            # Backend env vars (DB, JWT, GitHub)
     ├── package.json                    # Backend dependencies
-    ├── docker-compose.yml              # PostgreSQL + Redis containers
+    ├── docker-compose.yml              # PostgreSQL + Redis + Mailpit containers
     ├── nest-cli.json                   # NestJS CLI config
     ├── tsconfig.json                   # Backend TypeScript config
     │
@@ -927,6 +927,7 @@ sequenceDiagram
 |----------|---------|---------|
 | `GITHUB_TOKEN` | `ghp_xxxxxxxxxxxx` | Server-side GitHub API token for the proxy route. Increases rate limit from 60 to 5,000/hour. |
 | `NEXT_PUBLIC_API_URL` | `http://localhost:3001/api/v1` | NestJS backend URL for the Axios client. |
+| `NEXT_PUBLIC_GITHUB_CLIENT_ID` | GitHub OAuth App Client ID | Enables the GitHub sign-in button. |
 
 ### 14.2 Backend (`backend/.env`)
 
@@ -939,6 +940,35 @@ sequenceDiagram
 | `GITHUB_CALLBACK_URL` | `http://localhost:3000/auth/callback` | OAuth redirect URI. |
 | `JWT_SECRET` | `your-secret-key` | Secret key for signing JWT tokens. |
 | `PORT` | `3001` | Backend server port. |
+| `APP_URL` | `http://localhost:3000` | Public frontend URL used to construct password-reset links. |
+| `SMTP_HOST`, `SMTP_PORT` | `localhost`, `1025` | SMTP server used for password-reset emails. Defaults to local Mailpit. |
+| `SMTP_USER`, `SMTP_PASSWORD` | optional | SMTP authentication when required by the provider. |
+| `SMTP_SECURE` | `false` | Enables TLS for SMTP when set to `true`. |
+| `MAIL_FROM` | `DevBattle <noreply@example.com>` | Sender address for reset emails. |
+
+Mailpit captures messages locally; it does **not** deliver them to Gmail or Outlook. To deliver real email, replace the local SMTP values in `backend/.env` with a provider account:
+
+**Gmail** (requires 2-Step Verification and a Google App Password; do not use your normal Google password):
+```env
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=465
+SMTP_SECURE=true
+SMTP_USER=your-sending-address@gmail.com
+SMTP_PASSWORD=your-google-app-password
+MAIL_FROM=DevBattle <your-sending-address@gmail.com>
+```
+
+**Outlook.com / Microsoft 365**:
+```env
+SMTP_HOST=smtp-mail.outlook.com
+SMTP_PORT=587
+SMTP_SECURE=false
+SMTP_USER=your-sending-address@outlook.com
+SMTP_PASSWORD=your-mailbox-password-or-provider-app-password
+MAIL_FROM=DevBattle <your-sending-address@outlook.com>
+```
+
+After changing `backend/.env`, restart the backend. `APP_URL` must be a URL recipients can open; `http://localhost:3000` only works for your own machine during local testing. For local testing, keep the Mailpit values and read messages at `http://localhost:8025`. Never commit SMTP credentials.
 
 ---
 
@@ -1015,10 +1045,12 @@ npm install
 ```
 
 ### Step 4: Configure Environment Variables
+Copy the safe templates with `Copy-Item .env.example .env.local` and `Copy-Item backend/.env.example backend/.env`, then fill in your OAuth app and a unique JWT secret.
 Create `/.env.local` (frontend):
 ```env
 GITHUB_TOKEN=ghp_your_personal_access_token
 NEXT_PUBLIC_API_URL=http://localhost:3001/api/v1
+NEXT_PUBLIC_GITHUB_CLIENT_ID=your_github_oauth_client_id
 ```
 
 Create `/backend/.env` (backend):
@@ -1027,26 +1059,53 @@ DATABASE_URL=postgresql://user:password@host:5432/database
 DIRECT_URL=postgresql://user:password@host:5432/database
 GITHUB_CLIENT_ID=your_github_oauth_client_id
 GITHUB_CLIENT_SECRET=your_github_oauth_client_secret
-JWT_SECRET=your_jwt_secret
+JWT_SECRET=generate_a_long_random_secret
 PORT=3001
+APP_URL=http://localhost:3000
+SMTP_HOST=localhost
+SMTP_PORT=1025
+SMTP_SECURE=false
+MAIL_FROM=DevBattle <noreply@example.com>
 ```
 
-### Step 5: Start the Backend
+For local password-reset email testing, the Docker Compose setup includes Mailpit. Open `http://localhost:8025` after starting Docker to view emails. For production, configure SMTP credentials from your email provider and set `SMTP_SECURE` appropriately. Never commit real credentials.
+
+### Step 5: Start PostgreSQL, Redis, and Mailpit
+```bash
+cd backend
+docker compose up -d
+```
+
+### Step 6: Apply the Database Schema
+```bash
+cd backend
+npx prisma generate
+npx prisma db push
+```
+
+### Step 7: Start the Backend
 ```bash
 cd backend
 npm run start:dev        # Starts NestJS on port 3001
 ```
 
-### Step 6: Start the Frontend
+### Step 8: Start the Frontend
 ```bash
 # From root directory
 npm run dev              # Starts Next.js on port 3000
 ```
 
-### Step 7: Open the App
+### Step 9: Open the App
 - **Frontend:** http://localhost:3000
 - **Backend API:** http://localhost:3001/api/v1
 - **Swagger Docs:** http://localhost:3001/api/docs
+
+### Test the Password-Reset Flow
+1. Create an account with email and password at `http://localhost:3000/signup`.
+2. Visit `http://localhost:3000/forgot-password`, enter that email, and submit.
+3. For local Mailpit, open `http://localhost:8025` and click the reset link. For real delivery, configure Gmail/Outlook SMTP above and check the recipient inbox (including Spam/Junk).
+4. Choose a new password, then sign in with it. A reset link expires after 30 minutes and cannot be reused.
+5. Visiting `/dashboard` without a valid session redirects to `/login`.
 
 ---
 
