@@ -1,24 +1,28 @@
-name: 🏷️ Retroactive Labeler for Merged PRs
+name: 🏷️ Retroactive Labeler for Merged PRs and Closed Issues
 
 on:
-  workflow_dispatch: # Run manually with 1 click from GitHub Actions tab
+  push:
+    branches:
+      - main
+  workflow_dispatch:
 
 permissions:
   pull-requests: write
   issues: write
 
 jobs:
-  label-past-prs:
-    name: 🔄 Retroactively Label Past Merged PRs
+  label-past-prs-and-issues:
+    name: 🔄 Retroactively Label Closed PRs & Issues
     runs-on: ubuntu-latest
     steps:
-      - name: Process Closed & Merged PRs
+      - name: Process Closed PRs & Closed Issues
         uses: actions/github-script@v7
         with:
           script: |
             const owner = context.repo.owner;
             const repo = context.repo.repo;
 
+            // --- 1. PROCESS CLOSED PRs ---
             console.log(`Fetching closed PRs for ${owner}/${repo}...`);
             const pulls = await github.rest.pulls.list({
               owner,
@@ -35,7 +39,7 @@ jobs:
                 continue;
               }
 
-              const currentLabels = pr.labels.map(l => l.name.toLowerCase());
+              const currentLabels = pr.labels.map(l => (typeof l === 'string' ? l : l.name).toLowerCase());
               const labelsToAdd = [];
 
               // Always ensure 'nsoc26' is present
@@ -81,4 +85,59 @@ jobs:
                 console.log(`PR #${pr.number} already has all required labels.`);
               }
             }
-            console.log("Retroactive labelling complete!");
+
+            // --- 2. PROCESS CLOSED ISSUES ---
+            console.log(`Fetching closed issues for ${owner}/${repo}...`);
+            const issues = await github.rest.issues.listForRepo({
+              owner,
+              repo,
+              state: 'closed',
+              per_page: 50
+            });
+
+            console.log(`Found ${issues.data.length} closed issues.`);
+
+            for (const issue of issues.data) {
+              // GitHub issues API includes PRs unless filtered
+              if (issue.pull_request) continue;
+
+              const currentLabels = issue.labels.map(l => (typeof l === 'string' ? l : l.name).toLowerCase());
+              const labelsToAdd = [];
+
+              if (!currentLabels.includes('nsoc26')) {
+                labelsToAdd.push('nsoc26');
+              }
+
+              const hasLevel = currentLabels.some(l => ['level1', 'level2', 'level3'].includes(l));
+              if (!hasLevel) {
+                const title = issue.title.toLowerCase();
+                if (title.includes('doc') || title.includes('typo') || title.includes('readme')) {
+                  labelsToAdd.push('level1');
+                } else if (
+                  title.includes('ui') ||
+                  title.includes('component') ||
+                  title.includes('page') ||
+                  title.includes('style') ||
+                  title.includes('button') ||
+                  title.includes('layout')
+                ) {
+                  labelsToAdd.push('level2');
+                } else {
+                  labelsToAdd.push('level2');
+                }
+              }
+
+              if (labelsToAdd.length > 0) {
+                console.log(`Tagging Closed Issue #${issue.number} (${issue.title}) with [${labelsToAdd.join(', ')}]`);
+                await github.rest.issues.addLabels({
+                  owner,
+                  repo,
+                  issue_number: issue.number,
+                  labels: labelsToAdd
+                });
+              } else {
+                console.log(`Issue #${issue.number} already has all required labels.`);
+              }
+            }
+
+            console.log("Retroactive labelling for PRs and Issues complete!");
