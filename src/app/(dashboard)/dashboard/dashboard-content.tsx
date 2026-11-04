@@ -35,7 +35,14 @@ export function DashboardContent() {
     );
   }
 
-  if (!currentUser) return null;
+  if (!currentUser) {
+    return (
+      <div className="flex min-h-[60vh] flex-col items-center justify-center gap-4 text-center">
+        <Loader2 className="h-8 w-8 animate-spin text-purple-500" />
+        <p className="text-sm text-slate-400">Loading developer profile...</p>
+      </div>
+    );
+  }
 
   const achievements = (currentUser as any).achievements || [];
   const activeChallenges = (challengesData || []).filter((c: any) => !c.isCompleted).slice(0, 4);
