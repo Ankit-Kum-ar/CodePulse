@@ -9,11 +9,11 @@ async function check() {
       activities: true,
       languages: true,
       rating: true,
-    }
+    },
   });
 
   if (users.length === 0) {
-    console.log("No users found in DB.");
+    console.log('No users found in DB.');
     return;
   }
 
