@@ -6,10 +6,13 @@ export async function updateSession(request: NextRequest) {
     request,
   });
 
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseUrl =
+    process.env.NEXT_PUBLIC_SUPABASE_URL ||
+    'https://apoejsduhsbzychbxbek.supabase.co';
   const supabaseKey =
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
-    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY ||
+    'sb_publishable_QtysVGbRwhQ-I0IY1JClAQ_9qbFwmyd';
 
   // If Supabase credentials are not set yet or are placeholders, skip redirection to prevent breaking dev server
   if (!supabaseUrl || !supabaseKey || supabaseUrl.includes('your-project-ref')) {
