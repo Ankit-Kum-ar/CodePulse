@@ -195,10 +195,10 @@ export function Hero3D() {
             key={i}
             className="absolute w-1 h-1 bg-sky-400 rounded-full hero-particle"
             style={{
-              left: `${Math.random() * 100}%`,
+              left: `${((i * 37 + 17) % 96) + 2}%`,
               bottom: "-20px",
-              animationDuration: `${5 + Math.random() * 10}s`,
-              animationDelay: `${Math.random() * 5}s`,
+              animationDuration: `${5 + ((i * 7) % 10)}s`,
+              animationDelay: `${((i * 1.3) % 5).toFixed(2)}s`,
               boxShadow: "0 0 10px 2px rgba(56, 189, 248, 0.6)",
             }}
           />
