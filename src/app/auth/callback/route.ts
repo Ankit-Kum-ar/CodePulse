@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 
 export async function GET(request: Request) {
-  const { searchParams, origin } = new URL(request.url);
+  const { searchParams } = new URL(request.url);
   const code = searchParams.get('code');
   const next = searchParams.get('next') ?? '/dashboard';
 
@@ -10,19 +10,11 @@ export async function GET(request: Request) {
     const supabase = await createClient();
     const { error } = await supabase.auth.exchangeCodeForSession(code);
     if (!error) {
-      const forwardedHost = request.headers.get('x-forwarded-host');
-      const isLocalEnv = process.env.NODE_ENV === 'development';
-      if (isLocalEnv) {
-        return NextResponse.redirect(`${origin}${next}`);
-      } else if (forwardedHost) {
-        return NextResponse.redirect(`https://${forwardedHost}${next}`);
-      } else {
-        return NextResponse.redirect(`${origin}${next}`);
-      }
+      return NextResponse.redirect(new URL(next, request.url));
     }
+    console.error('Error exchanging code for session:', error.message);
   }
 
-  // If error exchanging code, redirect to login with error flag
-  return NextResponse.redirect(`${origin}/login?error=Could+not+authenticate+user`);
+  // If error exchanging code, redirect to login
+  return NextResponse.redirect(new URL('/login?error=Could+not+authenticate+user', request.url));
 }
-
