@@ -29,8 +29,10 @@ export function BattleSetup({ onStart }: BattleSetupProps) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (player1 && player2) {
-      onStart(player1, player2, battleType.id);
+    const p1 = player1.trim();
+    const p2 = player2.trim();
+    if (p1 && p2) {
+      onStart(p1, p2, battleType.id);
     }
   };
 
@@ -237,30 +239,32 @@ export function BattleSetup({ onStart }: BattleSetupProps) {
                 <button
                   type="button"
                   onClick={handleRandom}
-                  className="flex-1 sm:flex-none px-6 py-4 rounded-xl font-semibold text-sm border border-border/50 bg-background/50 hover:bg-accent/50 hover:border-border transition-all flex items-center justify-center gap-2 group"
+                  aria-label="Pick random developers"
+                  className="flex-1 sm:flex-none px-6 py-4 rounded-xl font-semibold text-sm border border-border/50 bg-background/50 hover:bg-accent/50 hover:border-border transition-all flex items-center justify-center gap-2 group focus:outline-none focus:ring-2 focus:ring-purple-500/50"
                 >
-                  <Wand2 className="w-4 h-4 text-purple-500 group-hover:rotate-12 transition-transform" />
+                  <Wand2 className="w-4 h-4 text-purple-500 group-hover:rotate-12 transition-transform" aria-hidden="true" />
                   Random
                 </button>
 
                 <button
                   type="submit"
-                  disabled={!player1 || !player2}
+                  disabled={!player1.trim() || !player2.trim()}
+                  aria-label="Start battle between developers"
                   className={cn(
-                    "flex-[2] sm:flex-none relative group overflow-hidden px-8 py-4 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2",
-                    !player1 || !player2
+                    "flex-[2] sm:flex-none relative group overflow-hidden px-8 py-4 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2 focus:outline-none focus:ring-2 focus:ring-primary/50",
+                    !player1.trim() || !player2.trim()
                       ? "bg-muted text-muted-foreground cursor-not-allowed"
                       : "text-white shadow-xl hover:shadow-primary/25 active:scale-[0.98]"
                   )}
                 >
-                  {player1 && player2 && (
+                  {player1.trim() && player2.trim() && (
                     <div className="absolute inset-0 bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 group-hover:scale-105 transition-transform duration-500" />
                   )}
-                  {!player1 || !player2 ? (
+                  {!player1.trim() || !player2.trim() ? (
                     <div className="absolute inset-0 bg-muted" />
                   ) : null}
                   <span className="relative z-10 flex items-center gap-2">
-                    <Swords className={cn("w-4 h-4", player1 && player2 && "animate-bounce")} />
+                    <Swords className={cn("w-4 h-4", player1.trim() && player2.trim() && "animate-bounce")} aria-hidden="true" />
                     Start Battle
                   </span>
                 </button>
