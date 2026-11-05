@@ -77,11 +77,12 @@ export default function LeaderboardPage() {
           
           <div className="flex items-center gap-4">
             <div className="relative group">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground transition-colors group-focus-within:text-primary" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground transition-colors group-focus-within:text-primary" aria-hidden="true" />
               <input
                 type="text"
                 placeholder="Search username..."
                 value={searchQuery}
+                aria-label="Search developer by GitHub username"
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10 pr-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-sm placeholder:text-muted-foreground/50 focus:outline-none focus:border-primary/50 focus:ring-1 focus:ring-primary/50 w-full sm:w-64 transition-all"
               />
@@ -256,7 +257,8 @@ export default function LeaderboardPage() {
                   href={`https://github.com/${(selectedUser as any).username}`}
                   target="_blank"
                   rel="noreferrer"
-                  className="px-4 py-2 bg-white text-black font-semibold rounded-lg hover:bg-white/90 transition-colors text-sm flex items-center gap-2"
+                  aria-label={`View GitHub profile for ${(selectedUser as any).username} in a new tab`}
+                  className="px-4 py-2 bg-white text-black font-semibold rounded-lg hover:bg-white/90 transition-colors text-sm flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-white/50"
                 >
                   <GithubIcon className="w-4 h-4" />
                   View GitHub Profile
