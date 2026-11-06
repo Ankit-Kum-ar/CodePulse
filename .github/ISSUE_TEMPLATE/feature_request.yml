@@ -1,56 +1,102 @@
 name: ✨ Feature Proposal (NSoC'26)
-description: Suggest an idea or new capability for CodePulse
+description: Propose a new feature, enhancement, or capability for CodePulse
 title: "[FEAT]: "
 labels: ["nsoc26", "feature"]
 body:
   - type: markdown
     attributes:
       value: |
-        ### 🚀 Nexus Spring of Code (NSoC) 2026 Feature Proposal
-        Got an idea to make CodePulse / DevBattle even more awesome? Propose it here!
-        **Rule:** You must wait for Admin review and official assignment before opening any PR.
+        ## ✨ Nexus Spring of Code (NSoC'26) — Feature Proposal
+        Have an idea to make **CodePulse** even more powerful for developers? We'd love to hear it!
+
+        > 📌 **Key Rules:**
+        > - Propose well-scoped, realistic features.
+        > - To claim this issue, comment **`/assign`** after creation.
+        > - Maintainer (@code-with-abhi-i5) will review and confirm the official Level tag (`level1`, `level2`, `level3`).
+        > - Assigned contributors have **7 days** to open their Pull Request.
+
   - type: input
     id: title
     attributes:
-      label: Feature Title
-      description: Concise one-liner describing the feature.
-      placeholder: e.g. Add dark/light mode toggle shortcut (Cmd+Shift+L)
+      label: 💡 Feature Title (Clear & Concise)
+      description: What feature are you proposing?
+      placeholder: e.g., Add Export Analytics Report as PNG / CSV
     validations:
       required: true
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: 📂 Target Area / Component
+      description: Where will this feature live?
+      options:
+        - "Dashboard & Analytics (Charts, Heatmaps, Wrapped)"
+        - "Battles & Arenas (Developer VS Developer)"
+        - "Leaderboard & Profile (Rankings, Search, Badges)"
+        - "Repositories (Filters, Lists, Detail Modal)"
+        - "Settings & Preferences (Themes, LocalStorage, Persistence)"
+        - "Topbar / Navigation / Command Palette"
+        - "Backend API / Webhooks / Services"
+        - "Documentation / Testing / Tooling"
+    validations:
+      required: true
+
   - type: textarea
     id: problem
     attributes:
-      label: Problem / Motivation
-      description: What problem does this solve, or what value does it add for developers?
-      placeholder: Currently users must open settings to switch theme...
+      label: ❓ Problem & Motivation (Why is this needed?)
+      description: What pain point does this solve, or what value does it bring to users?
+      placeholder: Currently, developers can see their analytics on the screen but have no way to download or share their stats card on social media...
     validations:
       required: true
+
   - type: textarea
     id: solution
     attributes:
-      label: Proposed Solution / Implementation Details
-      description: Detailed description of how this should work and which files/components would be affected.
-      placeholder: Implement global keyboard listener using cmdk or custom hook in root layout...
+      label: 🛠️ Proposed Solution & Feature Breakdown
+      description: Explain how this feature should work and what UI/API elements will be added.
+      placeholder: |
+        1. Add an 'Export Report' button to the top-right of the Analytics page.
+        2. When clicked, render an off-screen card using html2canvas or SVG generator.
+        3. Trigger download of a clean 'codepulse-analytics-[username].png' file.
     validations:
       required: true
+
+  - type: textarea
+    id: files
+    attributes:
+      label: 📁 Relevant Files & Components (If known)
+      description: List the files you plan to create or modify.
+      placeholder: |
+        - src/app/(dashboard)/analytics/page.tsx
+        - src/components/analytics/export-card.tsx
+    validations:
+      required: false
+
   - type: dropdown
     id: suggested_level
     attributes:
-      label: Proposed NSoC Level
-      description: Select the appropriate level matching NSoC guidelines:
+      label: 🏷️ Proposed NSoC Level
+      description: What difficulty level do you think this feature is? (Admin reviews and sets official tag)
       options:
-        - "Level 1 (3 Pts) - Documentation / Small modification"
-        - "Level 2 (5 Pts) - UI / Frontend / Component enhancement"
-        - "Level 3 (10 Pts) - Core Logic / Backend / API / Database"
+        - "Level 1 — Simple UI tweak, button addition, copy/docs change"
+        - "Level 2 — New component, data filtering, modal, API integration"
+        - "Level 3 — Complex full-stack feature, real-time sync, new backend module"
     validations:
       required: true
-  - type: checkboxes
-    id: assignment_acknowledgment
-    attributes:
-      label: NSoC Contributor Checklist
-      options:
-        - label: I would like to work on this issue once approved and assigned.
-          required: false
-        - label: I understand that PRs opened without official assignment will be closed.
-          required: true
 
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: 📋 Contributor Agreement & NSoC Rules
+      options:
+        - label: I want to work on this feature (comment `/assign` below after submitting).
+          required: false
+        - label: I verified that this feature is not already implemented or requested.
+          required: true
+        - label: I will develop this on a dedicated branch (`git checkout -b feat/feature-name`).
+          required: true
+        - label: I agree to link this issue with `Closes #<issue_number>` in my PR description.
+          required: true
+        - label: I understand that inactivity for 7 days will result in unassignment.
+          required: true

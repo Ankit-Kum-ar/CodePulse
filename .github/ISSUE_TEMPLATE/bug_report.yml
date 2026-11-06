@@ -1,67 +1,109 @@
 name: 🐛 Bug Report (NSoC'26)
-description: Report a reproducible bug in CodePulse
+description: Report a bug or broken behavior in CodePulse
 title: "[BUG]: "
 labels: ["nsoc26", "bug"]
 body:
   - type: markdown
     attributes:
       value: |
-        ### 🌟 Nexus Spring of Code (NSoC) 2026 Bug Report
-        Thank you for helping improve CodePulse! Please provide clear details so we can reproduce and verify this issue.
-        **Note:** Do not start working on a PR until an Admin has officially assigned this issue to you.
+        ## 🐛 Nexus Spring of Code (NSoC'26) — Bug Report
+        Thank you for helping make **CodePulse** better! Please fill out the form below carefully so maintainers and fellow contributors can easily understand and reproduce the problem.
+
+        > 📌 **Remember:**
+        > - Only **one contributor** is assigned per issue.
+        > - Once assigned, you have **7 days** to submit your Pull Request.
+        > - PRs must include `Closes #<issue-number>`.
+
   - type: input
     id: summary
     attributes:
-      label: Brief Summary
-      description: A clear and concise description of the bug.
-      placeholder: e.g. Leaderboard avatar images fail to render on safari mobile
+      label: 📌 Bug Summary (Short & Clear)
+      description: What is breaking or not working as expected?
+      placeholder: e.g., Leaderboard search crashes when typing special characters
     validations:
       required: true
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: 📂 Affected Component / Area
+      description: Which part of CodePulse does this bug affect?
+      options:
+        - "Frontend — Dashboard / UI / Pages"
+        - "Frontend — Analytics / Charts"
+        - "Frontend — Battles Arena"
+        - "Frontend — Leaderboard / Profile"
+        - "Frontend — Settings / Preferences"
+        - "Backend — NestJS API / Endpoints"
+        - "Authentication — Supabase / GitHub OAuth"
+        - "Other / Build / Config"
+    validations:
+      required: true
+
   - type: textarea
     id: reproduction
     attributes:
-      label: Steps to Reproduce
-      description: How can we reproduce this behavior?
+      label: 🔁 Steps to Reproduce
+      description: Detailed steps so anyone can see the bug locally.
       placeholder: |
-        1. Go to '/leaderboard'
-        2. Click on 'India' tab
-        3. Scroll down past 20 items
-        4. See error in console
+        1. Navigate to '/leaderboard'
+        2. Click on the search bar
+        3. Type 'test@user'
+        4. Observe the page freezing or crashing in developer console
     validations:
       required: true
+
   - type: textarea
     id: expected
     attributes:
-      label: Expected Behavior
-      description: What should have happened instead?
-      placeholder: Avatars should lazy-load smoothly without throwing console errors.
+      label: 🎯 Expected Behavior vs Current Behavior
+      description: What should happen instead of what is happening right now?
+      placeholder: |
+        - Current: Page freezes and shows uncaught TypeError.
+        - Expected: Shows 'No developers found' placeholder gracefully without error.
     validations:
       required: true
+
+  - type: textarea
+    id: files
+    attributes:
+      label: 📁 Suspected File(s) or Location
+      description: If you know which file or component has the bug, please list it here.
+      placeholder: e.g., src/app/(dashboard)/leaderboard/page.tsx
+    validations:
+      required: false
+
   - type: textarea
     id: screenshots
     attributes:
-      label: Screenshots / Screen Recordings
-      description: Drag and drop screenshots, GIF, or screen recordings demonstrating the issue.
+      label: 📸 Screenshots / Error Logs
+      description: Paste screenshots, GIFs, or terminal/console logs if available (drag and drop images directly).
+      placeholder: Drag and drop screenshots or paste stack trace here...
     validations:
       required: false
+
   - type: dropdown
     id: suggested_level
     attributes:
-      label: Suggested NSoC Level
-      description: Based on NSoC guidelines, what difficulty level is this? (Admin makes final decision)
+      label: 🏷️ Suggested NSoC Difficulty Level
+      description: Note that the Project Admin (@code-with-abhi-i5) will officially review and assign the final level label.
       options:
-        - "Level 1 (3 Pts) - Documentation / Typo / Minor fix"
-        - "Level 2 (5 Pts) - UI / Frontend / Component fix"
-        - "Level 3 (10 Pts) - Core Logic / Backend / Database fix"
+        - "Level 1 — Minor UI glitch, typo, styling fix"
+        - "Level 2 — Component logic error, form handling, responsive bug"
+        - "Level 3 — Complex API crash, authentication loop, state synchronization"
     validations:
       required: true
+
   - type: checkboxes
     id: terms
     attributes:
-      label: Code of Conduct & Contribution Terms
+      label: 📋 Contributor Agreement & NSoC Rules
       options:
-        - label: I have searched existing issues to ensure this is not a duplicate.
+        - label: I want to work on fixing this bug (comment `/assign` below after submitting).
+          required: false
+        - label: I searched existing issues to ensure this is not a duplicate.
           required: true
-        - label: I will wait for an Admin (@code-with-abhi-i5) to assign me before opening a PR.
+        - label: I will create a separate branch (`git checkout -b fix/issue-name`) and NOT push to main.
           required: true
-
+        - label: I agree to link this issue in my PR using `Closes #<issue_number>` and submit within 7 days.
+          required: true
