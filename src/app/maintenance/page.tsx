@@ -77,6 +77,9 @@ export default function MaintenancePage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
           className="flex items-center justify-center gap-3 mb-8"
+          role="timer"
+          aria-live="polite"
+          aria-label={`Maintenance countdown: ${timeLeft.hours} hours, ${timeLeft.minutes} minutes, ${timeLeft.seconds} seconds remaining`}
         >
           {[
             { value: pad(timeLeft.hours), label: "Hours" },
@@ -86,7 +89,7 @@ export default function MaintenancePage() {
             <div key={i} className="flex flex-col items-center">
               <div className="glass-card rounded-2xl w-20 h-20 flex items-center justify-center mb-2">
                 <span className="text-3xl font-bold font-mono gradient-text">
-                  {item.value}
+                  <time dateTime={`PT${item.value}${item.label[0]}`}>{item.value}</time>
                 </span>
               </div>
               <span className="text-xs text-muted-foreground">{item.label}</span>
@@ -95,31 +98,32 @@ export default function MaintenancePage() {
         </motion.div>
 
         {/* Status updates */}
-        <motion.div
+        <motion.section
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.6 }}
+          aria-label="Maintenance status updates"
           className="glass-card rounded-2xl p-4 mb-6 text-left"
         >
           <div className="flex items-center gap-2 mb-3">
-            <Clock className="w-4 h-4 text-muted-foreground" />
-            <span className="text-sm font-medium">Status Updates</span>
+            <Clock className="w-4 h-4 text-muted-foreground" aria-hidden="true" />
+            <h2 className="text-sm font-medium">Status Updates</h2>
           </div>
-          <div className="space-y-2 text-sm">
-            <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-emerald-400" />
+          <div className="space-y-2 text-sm" role="list">
+            <div className="flex items-center gap-2" role="listitem">
+              <span className="w-2 h-2 rounded-full bg-emerald-400" aria-hidden="true" />
               <span className="text-muted-foreground">Database migration completed</span>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+            <div className="flex items-center gap-2" role="listitem">
+              <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" aria-hidden="true" />
               <span className="text-muted-foreground">Updating API endpoints...</span>
             </div>
-            <div className="flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-white/20" />
+            <div className="flex items-center gap-2" role="listitem">
+              <span className="w-2 h-2 rounded-full bg-white/20" aria-hidden="true" />
               <span className="text-muted-foreground">Cache invalidation pending</span>
             </div>
           </div>
-        </motion.div>
+        </motion.section>
 
         <motion.button
           initial={{ opacity: 0 }}
