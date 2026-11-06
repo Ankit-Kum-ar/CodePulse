@@ -1,12 +1,6 @@
 name: Seed Curated NSoC Level-2 Issues
 
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - '.github/scripts/seed-issues.js'
-      - '.github/workflows/seed-issues.yml'
   workflow_dispatch:
 
 permissions:
