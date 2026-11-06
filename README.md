@@ -530,6 +530,24 @@ GitHub API → Raw JSON → Process → Score Calculation → Persona Assignment
                                     → Final DevData JSON → Frontend
 ```
 
+### 8.2 Dynamic GitHub Profile SVG Badge Generator
+
+**File:** [`src/app/api/badge/[username]/route.ts`](file:///src/app/api/badge/[username]/route.ts)
+
+**Endpoint:** `GET /api/badge/:username`
+
+**What It Does:**
+1. Fetches developer metrics (Pulse score, global rank, tier/persona, commits, stars, PRs, streak) from the NestJS backend API or GitHub proxy.
+2. Renders an ultra-crisp, dark-themed SVG badge (`495x195`) with rounded corners, glowing gradient borders, a circular score gauge, and a 2x2 stats grid.
+3. Automatically escapes all XML entities (`&`, `<`, `>`, `"`, `'`) to prevent formatting breakage and XSS.
+4. Serves with caching headers: `Cache-Control: public, max-age=3600, s-maxage=7200`.
+5. Gracefully handles non-existent or invalid usernames with an elegant fallback SVG badge (status 200, SVG content-type), ensuring GitHub README embeds (`![CodePulse Badge](...)`) always render cleanly through GitHub Camo without broken image icons.
+
+**Embed in GitHub README:**
+```markdown
+[![CodePulse Badge](https://codepulse.dev/api/badge/your-username)](https://codepulse.dev)
+```
+
 ---
 
 ## 9. Authentication Flow
