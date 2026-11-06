@@ -17,8 +17,25 @@ export default function BattlesPage() {
   const [phase, setPhase] = useState<BattlePhase>("SETUP");
   const [ghostBattleData, setGhostBattleData] = useState<{ p1: any, p2: any, battleType: string } | null>(null);
   const [setupUsernames, setSetupUsernames] = useState<{p1: string, p2: string, battleType: string} | null>(null);
+  const [initialP1, setInitialP1] = useState("");
+  const [initialP2, setInitialP2] = useState("");
 
   const [isIntroFinished, setIsIntroFinished] = useState(false);
+
+  // Read URL query parameters (e.g. /battles?p2=<username>)
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      const p2 = params.get("p2") || params.get("opponent") || params.get("vs");
+      const p1 = params.get("p1") || currentUser?.username || "code-with-abhi-i5";
+      if (p2) {
+        setInitialP2(p2);
+      }
+      if (p1) {
+        setInitialP1(p1);
+      }
+    }
+  }, [currentUser]);
 
   const startGhostBattle = async (p1: string, p2: string, battleType: string) => {
     setSetupUsernames({ p1, p2, battleType });
@@ -81,7 +98,11 @@ export default function BattlesPage() {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
           >
-            <BattleSetup onStart={startGhostBattle} />
+            <BattleSetup
+              onStart={startGhostBattle}
+              initialPlayer1={initialP1}
+              initialPlayer2={initialP2}
+            />
           </motion.div>
         )}
 

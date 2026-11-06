@@ -113,8 +113,8 @@ function CompareDashboard() {
 
   // Check URL params
   useEffect(() => {
-    const q1 = searchParams.get('dev1');
-    const q2 = searchParams.get('dev2');
+    const q1 = searchParams.get('user1') || searchParams.get('dev1') || searchParams.get('u1');
+    const q2 = searchParams.get('user2') || searchParams.get('dev2') || searchParams.get('u2');
     
     if (q1 && q2 && !dev1 && !dev2 && !isLoading) {
       setSearch1(q1);
