@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
+import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 
 interface BattleIntroProps {
@@ -51,8 +52,9 @@ export function BattleIntro({ p1Username, p2Username, onIntroComplete }: BattleI
             animate={{ x: 0, opacity: 1 }}
             className="flex flex-col items-center"
           >
-            <div className="w-24 h-24 rounded-2xl bg-muted border border-border flex items-center justify-center mb-4 overflow-hidden">
-               <img src={`https://github.com/${p1Username}.png`} alt={p1Username} className="w-full h-full object-cover" />
+            <div className="w-24 h-24 rounded-2xl bg-muted border border-border flex items-center justify-center mb-4 overflow-hidden relative">
+               <Skeleton className="absolute inset-0 rounded-2xl" />
+               <img src={`https://github.com/${p1Username}.png`} alt={p1Username} className="w-full h-full object-cover relative z-10" />
             </div>
             <span className="font-semibold text-lg">@{p1Username}</span>
           </motion.div>
@@ -71,8 +73,9 @@ export function BattleIntro({ p1Username, p2Username, onIntroComplete }: BattleI
             animate={{ x: 0, opacity: 1 }}
             className="flex flex-col items-center"
           >
-            <div className="w-24 h-24 rounded-2xl bg-muted border border-border flex items-center justify-center mb-4 overflow-hidden">
-               <img src={`https://github.com/${p2Username}.png`} alt={p2Username} className="w-full h-full object-cover" />
+            <div className="w-24 h-24 rounded-2xl bg-muted border border-border flex items-center justify-center mb-4 overflow-hidden relative">
+               <Skeleton className="absolute inset-0 rounded-2xl" />
+               <img src={`https://github.com/${p2Username}.png`} alt={p2Username} className="w-full h-full object-cover relative z-10" />
             </div>
             <span className="font-semibold text-lg">@{p2Username}</span>
           </motion.div>

@@ -63,6 +63,13 @@ export function TableSkeleton({ rows = 5 }: { rows?: number }) {
   );
 }
 
+export { LeaderboardRowSkeleton, LeaderboardTableSkeleton } from "@/components/leaderboard/leaderboard-skeleton";
+export {
+  BattleCardSkeleton,
+  BattleStatsCardSkeleton,
+  BattleMatchmakingSkeleton,
+} from "@/components/battles/battle-skeleton";
+
 // ===========================
 // Empty States
 // ===========================

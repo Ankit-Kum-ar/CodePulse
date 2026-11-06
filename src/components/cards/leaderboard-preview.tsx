@@ -16,6 +16,7 @@ import {
   ArrowRight,
   Medal,
 } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 import type { LeaderboardEntry } from "@/types";
 
 // ===========================
@@ -27,6 +28,7 @@ interface LeaderboardPreviewProps {
   title?: string;
   viewAllHref?: string;
   className?: string;
+  isLoading?: boolean;
 }
 
 // ===========================
@@ -61,6 +63,7 @@ export function LeaderboardPreview({
   title = "Leaderboard",
   viewAllHref = "/leaderboard",
   className,
+  isLoading = false,
 }: LeaderboardPreviewProps) {
   const top5 = entries.slice(0, 5);
 
@@ -98,7 +101,27 @@ export function LeaderboardPreview({
       </div>
 
       {/* Entries */}
-      <StaggerContainer className="px-3 pb-3" delay={0.06}>
+      {isLoading ? (
+        <div className="px-3 pb-3 space-y-1" role="status" aria-label="Loading leaderboard preview">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className="flex items-center gap-3 rounded-2xl px-3 py-3">
+              <div className="w-8 flex-shrink-0 flex justify-center">
+                <Skeleton className="h-7 w-7 rounded-full" />
+              </div>
+              <Skeleton className="h-9 w-9 rounded-full shrink-0" />
+              <div className="flex-1 min-w-0 space-y-1.5">
+                <Skeleton className="h-3.5 w-24 rounded" />
+                <Skeleton className="h-2.5 w-16 rounded" />
+              </div>
+              <Skeleton className="h-4 w-12 rounded shrink-0 mr-2" />
+              <div className="w-10 flex-shrink-0 flex justify-end">
+                <Skeleton className="h-3.5 w-4 rounded" />
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <StaggerContainer className="px-3 pb-3" delay={0.06}>
         {top5.length > 0 ? (
           top5.map((entry) => {
             const rankChange = entry.previousRank - entry.rank;
@@ -198,6 +221,7 @@ export function LeaderboardPreview({
           </div>
         )}
       </StaggerContainer>
+      )}
     </motion.div>
   );
 }
