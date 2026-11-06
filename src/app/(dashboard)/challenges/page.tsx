@@ -121,7 +121,10 @@ export default function ChallengesPage() {
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="bg-white/5 border border-white/10 p-1 rounded-xl">
+        <TabsList
+          className="bg-white/5 border border-white/10 p-1 rounded-xl"
+          aria-label="Filter challenges by type"
+        >
           {tabs.map((tab) => {
             const Icon = tab.icon;
             return (
@@ -129,8 +132,9 @@ export default function ChallengesPage() {
                 key={tab.id}
                 value={tab.id}
                 className="rounded-lg data-[state=active]:bg-primary data-[state=active]:text-primary-foreground text-xs gap-1.5"
+                aria-label={`${tab.label} challenges`}
               >
-                <Icon className="w-3.5 h-3.5" />
+                <Icon className="w-3.5 h-3.5" aria-hidden="true" />
                 {tab.label}
               </TabsTrigger>
             );
@@ -138,9 +142,18 @@ export default function ChallengesPage() {
         </TabsList>
       </Tabs>
 
+      {/* Challenge results live region */}
+      <div
+        aria-live="polite"
+        aria-atomic="true"
+        className="sr-only"
+      >
+        {active.length} active and {completed.length} completed challenges in the {tabs.find(t => t.id === activeTab)?.label} category.
+      </div>
+
       {/* Active challenges */}
       {active.length > 0 && (
-        <div>
+        <section aria-label={`Active ${tabs.find(t => t.id === activeTab)?.label} challenges`}>
           <h2 className="text-lg font-semibold mb-3">Active Challenges</h2>
           <StaggerContainer className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {active.map((challenge) => (
@@ -149,12 +162,12 @@ export default function ChallengesPage() {
               </StaggerItem>
             ))}
           </StaggerContainer>
-        </div>
+        </section>
       )}
 
       {/* Completed */}
       {completed.length > 0 && (
-        <div>
+        <section aria-label={`Completed ${tabs.find(t => t.id === activeTab)?.label} challenges`}>
           <h2 className="text-lg font-semibold mb-3 text-muted-foreground">Completed</h2>
           <StaggerContainer className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {completed.map((challenge) => (
@@ -163,13 +176,17 @@ export default function ChallengesPage() {
               </StaggerItem>
             ))}
           </StaggerContainer>
-        </div>
+        </section>
       )}
 
       {active.length === 0 && completed.length === 0 && (
-        <div className="glass-card rounded-[20px] p-12 text-center border border-white/5 space-y-3">
+        <div
+          role="status"
+          aria-label="No challenges available"
+          className="glass-card rounded-[20px] p-12 text-center border border-white/5 space-y-3"
+        >
           <div className="w-12 h-12 rounded-2xl bg-white/5 mx-auto flex items-center justify-center text-muted-foreground">
-            <Target className="w-6 h-6" />
+            <Target className="w-6 h-6" aria-hidden="true" />
           </div>
           <h3 className="text-base font-semibold">No challenges found</h3>
           <p className="text-sm text-muted-foreground max-w-sm mx-auto">
