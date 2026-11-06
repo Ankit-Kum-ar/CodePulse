@@ -1,11 +1,27 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "motion/react";
 import { useInView } from "react-intersection-observer";
 import { useLeaderboardInfinite, useUserProfileSearch } from "@/hooks/api/use-leaderboard";
+import { useCurrentUser } from "@/hooks/api/use-auth";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Trophy, Search, Loader2, Users, Flag, Star, GitFork, BookOpen, Clock } from "lucide-react";
+import {
+  Trophy,
+  Search,
+  Loader2,
+  Users,
+  Flag,
+  Star,
+  GitFork,
+  BookOpen,
+  Clock,
+  Swords,
+  BarChart3,
+  ExternalLink,
+  X,
+} from "lucide-react";
 import { LeaderboardRowSkeleton, LeaderboardTableSkeleton } from "@/components/leaderboard/leaderboard-skeleton";
 
 const GithubIcon = ({ className }: { className?: string }) => (
@@ -18,6 +34,8 @@ import { cn } from "@/lib/utils";
 type LeaderboardCategory = "global" | "india" | "friends";
 
 export default function LeaderboardPage() {
+  const router = useRouter();
+  const { data: currentUser } = useCurrentUser();
   const [activeTab, setActiveTab] = useState<LeaderboardCategory>("friends");
   const [searchQuery, setSearchQuery] = useState("");
   const [debouncedSearch, setDebouncedSearch] = useState("");
@@ -204,7 +222,7 @@ export default function LeaderboardPage() {
         )}
       </div>
 
-      {/* Profile Modal Placeholder */}
+      {/* Profile Modal with Quick Action Triggers */}
       {selectedUser && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm" onClick={() => setSelectedUser(null)}>
           <motion.div 
@@ -214,10 +232,21 @@ export default function LeaderboardPage() {
             onClick={(e) => e.stopPropagation()}
             className="w-full max-w-lg bg-[#09090b] border border-white/10 rounded-3xl overflow-hidden shadow-2xl relative"
           >
+            {/* Modal Close Button */}
+            <button
+              type="button"
+              onClick={() => setSelectedUser(null)}
+              className="absolute top-4 right-4 z-20 w-8 h-8 rounded-full bg-black/40 hover:bg-black/70 border border-white/10 flex items-center justify-center text-white/70 hover:text-white transition-colors cursor-pointer"
+              aria-label="Close modal"
+            >
+              <X className="w-4 h-4" />
+            </button>
+
             <div className="h-32 bg-gradient-to-br from-primary/20 to-primary/5 relative">
               <div className="absolute -bottom-12 left-6">
                 <img 
                   src={(selectedUser as any).avatarUrl || `https://github.com/${(selectedUser as any).username}.png`} 
+                  alt={(selectedUser as any).username}
                   className="w-24 h-24 rounded-2xl border-4 border-[#09090b] bg-background object-cover"
                 />
               </div>
@@ -225,9 +254,21 @@ export default function LeaderboardPage() {
             
             <div className="pt-16 p-6">
               <h2 className="text-2xl font-bold">{(selectedUser as any).name || (selectedUser as any).username}</h2>
-              <p className="text-muted-foreground flex items-center gap-1.5 mt-1">
-                <GithubIcon className="w-4 h-4" /> @{(selectedUser as any).username}
-              </p>
+              <div className="flex items-center gap-2 mt-1">
+                <p className="text-muted-foreground flex items-center gap-1.5 text-sm">
+                  <GithubIcon className="w-4 h-4" /> @{(selectedUser as any).username}
+                </p>
+                <a
+                  href={`https://github.com/${(selectedUser as any).username}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={`Open GitHub profile for @${(selectedUser as any).username} in a new tab`}
+                  className="text-muted-foreground/60 hover:text-white transition-colors"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <ExternalLink className="w-3.5 h-3.5" />
+                </a>
+              </div>
 
               {(selectedUser as any).bio && (
                 <p className="mt-4 text-sm leading-relaxed text-white/80">{(selectedUser as any).bio}</p>
@@ -257,15 +298,65 @@ export default function LeaderboardPage() {
                 </div>
               </div>
               
-              <div className="mt-6 flex justify-end">
+              {/* Quick Action Triggers: Challenge & Compare */}
+              {(() => {
+                const currentUsername = (currentUser?.username || "code-with-abhi-i5").toLowerCase();
+                const targetUsername = ((selectedUser as any)?.username || "").toLowerCase();
+                const isCurrentUser = targetUsername === currentUsername;
+
+                if (isCurrentUser) {
+                  return (
+                    <div className="mt-6 py-2.5 px-4 rounded-xl bg-primary/10 border border-primary/20 text-xs text-primary font-medium text-center">
+                      This is your profile
+                    </div>
+                  );
+                }
+
+                return (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-6">
+                    <button
+                      type="button"
+                      id="challenge-developer-btn"
+                      onClick={() => {
+                        const target = (selectedUser as any).username;
+                        setSelectedUser(null);
+                        router.push(`/battles?p2=${encodeURIComponent(target)}`);
+                      }}
+                      className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-semibold text-sm transition-all shadow-lg shadow-purple-500/10 cursor-pointer"
+                    >
+                      <Swords className="w-4 h-4" />
+                      Challenge to Battle
+                    </button>
+
+                    <button
+                      type="button"
+                      id="compare-developer-btn"
+                      onClick={() => {
+                        const target = (selectedUser as any).username;
+                        const me = currentUser?.username || "code-with-abhi-i5";
+                        setSelectedUser(null);
+                        router.push(
+                          `/compare?user1=${encodeURIComponent(me)}&user2=${encodeURIComponent(target)}&dev1=${encodeURIComponent(me)}&dev2=${encodeURIComponent(target)}`
+                        );
+                      }}
+                      className="flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 text-white font-semibold text-sm transition-all cursor-pointer"
+                    >
+                      <BarChart3 className="w-4 h-4 text-blue-400" />
+                      Compare with Me
+                    </button>
+                  </div>
+                );
+              })()}
+
+              <div className="mt-4 flex justify-end">
                 <a 
                   href={`https://github.com/${(selectedUser as any).username}`}
                   target="_blank"
                   rel="noreferrer"
                   aria-label={`View GitHub profile for ${(selectedUser as any).username} in a new tab`}
-                  className="px-4 py-2 bg-white text-black font-semibold rounded-lg hover:bg-white/90 transition-colors text-sm flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-white/50"
+                  className="px-4 py-2 bg-white/10 text-white hover:bg-white/15 font-medium rounded-lg transition-colors text-xs flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-white/50"
                 >
-                  <GithubIcon className="w-4 h-4" />
+                  <GithubIcon className="w-3.5 h-3.5" />
                   View GitHub Profile
                 </a>
               </div>
