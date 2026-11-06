@@ -34,6 +34,47 @@ jobs:
             }
 
             // ==========================================
+            // 1B. AUTO-ASSIGN PR AUTHOR TO PR
+            // ==========================================
+            try {
+              const currentAssignees = (pr.assignees || []).map(a => a.login.toLowerCase());
+              if (!currentAssignees.includes(pr.user.login.toLowerCase())) {
+                console.log(`Auto-assigning PR author @${pr.user.login} to PR #${pr.number}...`);
+                await github.rest.issues.addAssignees({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: pr.number,
+                  assignees: [pr.user.login]
+                });
+                console.log(`✅ Auto-assigned @${pr.user.login} as PR Assignee.`);
+              }
+            } catch (err) {
+              console.warn(`Could not auto-assign author to PR: ${err.message}`);
+            }
+
+            // ==========================================
+            // 1C. AUTO-REQUEST REVIEW FROM MAINTAINER (@code-with-abhi-i5)
+            // ==========================================
+            const maintainer = 'code-with-abhi-i5';
+            if (pr.user.login.toLowerCase() !== maintainer.toLowerCase()) {
+              try {
+                const requested = (pr.requested_reviewers || []).map(r => r.login.toLowerCase());
+                if (!requested.includes(maintainer.toLowerCase())) {
+                  console.log(`Auto-requesting review from @${maintainer} on PR #${pr.number}...`);
+                  await github.rest.pulls.requestReviewers({
+                    owner: context.repo.owner,
+                    repo: context.repo.repo,
+                    pull_number: pr.number,
+                    reviewers: [maintainer]
+                  });
+                  console.log(`✅ Requested review from @${maintainer}.`);
+                }
+              } catch (err) {
+                console.warn(`Could not request review from @${maintainer}: ${err.message}`);
+              }
+            }
+
+            // ==========================================
             // 2. CHECK 0-LINE / TRIVIAL EDITS (Section 8 & 9)
             // ==========================================
             if (pr.changed_files === 0 || (pr.additions + pr.deletions === 0)) {
@@ -229,9 +270,11 @@ jobs:
                 `🎉 **All NSoC'26 Quality Checks Passed!**\n\n` +
                 `- ✅ Linked issue verified\n` +
                 `- ✅ \`nsoc26\` and valid \`${detectedLevel || 'level'}\` label applied\n` +
+                `- ✅ Contributor @${pr.user.login} assigned as PR Assignee\n` +
+                `- ✅ Review requested from maintainer @${maintainer}\n` +
                 `- ✅ \`.gitignore\` rules respected (no build/env files)\n` +
                 `- ✅ Code changes validated\n\n` +
-                `Maintainer can now proceed with final code review and merge.`;
+                `Maintainer (@${maintainer}) can now proceed with final code review and merge.`;
 
               if (botComment) {
                 await github.rest.issues.updateComment({
