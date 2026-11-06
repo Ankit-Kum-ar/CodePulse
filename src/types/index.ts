@@ -73,6 +73,8 @@ export interface Repository {
   updatedAt: string;
   topics: string[];
   isPrivate: boolean;
+  fork?: boolean;
+  isFork?: boolean;
   url: string;
 }
 
