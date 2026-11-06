@@ -2,97 +2,100 @@
   <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
 </p>
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+# CodePulse (DevBattle) - NestJS Backend
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+Enterprise backend services powering the CodePulse / DevBattle developer analytics and gamification platform.
 
-## Description
+---
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+## 🚀 Features
 
-## Project setup
+- **GitHub API Proxying & Smart Caching**: High-performance cached endpoints for GitHub developer profiles, repositories, activity, and events.
+- **Adaptive Rate Limiting**: Intelligent throttling via `@nestjs/throttler` keyed by authenticated user ID or client IP address.
+- **Cache Management**: Tiered in-memory and Redis-backed caching with `@nestjs/cache-manager`.
+- **Gamification Engine**: XP, levels, badges, battles, and developer rating calculations.
+- **Background Sync Workers**: BullMQ-powered queues for asynchronous profile synchronization.
+
+---
+
+## 🛡️ Rate Limiting Architecture (`@nestjs/throttler`)
+
+API abuse protection is enforced globally and on sensitive external proxy endpoints to prevent hitting GitHub's strict rate limits:
+
+- **Tracker Strategy (`CustomThrottlerGuard`)**:
+  - **Authenticated Users**: Throttled by User ID (`user-{id}`) extracted from JWT.
+  - **Unauthenticated / Public**: Throttled by Client IP address (`ip-{ip}`), with automatic resolution of reverse proxy `X-Forwarded-For` headers.
+- **Configured Thresholds**:
+  - **Global Default**: 60 requests / minute per tracker.
+  - **GitHub Proxy Endpoints (`/api/v1/github/developer`, `/profile`, `/repos`, `/events`)**: 30 requests / minute.
+  - **Strict Endpoints (`POST /api/v1/github/sync`, `DELETE /api/v1/github/cache/:username`)**: 10 requests / minute.
+- **Rate Limit Response**: When a client exceeds quota, the server responds with `HTTP 429 Too Many Requests` and standard rate limit headers (`Retry-After`, `X-RateLimit-Limit`, `X-RateLimit-Remaining`).
+
+---
+
+## ⚡ Caching Strategy (`@nestjs/cache-manager`)
+
+To minimize latency and safeguard external GitHub API quotas, non-volatile public data is cached with clearly defined Time-To-Live (TTL) durations:
+
+| Endpoint | Cache Key | TTL | Description |
+|---|---|---|---|
+| `GET /api/v1/github/developer/:username` | `github:developer:{username}` | **5 minutes** (300s) | Aggregated developer metrics (score, habit, persona, stats) |
+| `GET /api/v1/github/profile/:username` | `github:profile:{username}` | **10 minutes** (600s) | Public GitHub profile metadata |
+| `GET /api/v1/github/repos/:username` | `github:repos:{username}:{limit}` | **5 minutes** (300s) | Repositories metadata and statistics |
+| `GET /api/v1/github/events/:username` | `github:events:{username}:{limit}` | **3 minutes** (180s) | Recent public activity events |
+
+### Cache Invalidation & Bypassing
+1. **On-Demand Query Invalidation**:
+   Clients can pass `?force=true` or `?refresh=true` to any proxy GET endpoint to evict existing cache and trigger a fresh GitHub API fetch:
+   ```bash
+   GET /api/v1/github/developer/torvalds?force=true
+   ```
+2. **Explicit User Cache Invalidation**:
+   Calling `DELETE /api/v1/github/cache/:username` immediately clears all cached entries (`developer`, `profile`, `repos`, `events`) for the user:
+   ```bash
+   DELETE /api/v1/github/cache/torvalds
+   ```
+3. **Automatic TTL Expiration**:
+   Cache keys automatically expire after their specified TTL, ensuring data remains fresh without manual intervention.
+
+---
+
+## 📦 Project Setup
 
 ```bash
-$ npm install
+# Install dependencies
+npm install
+
+# Generate Prisma Client
+npx prisma generate
 ```
 
-## Compile and run the project
+## 🛠️ Compile and Run
 
 ```bash
-# development
-$ npm run start
+# Development (watch mode)
+npm run start:dev
 
-# watch mode
-$ npm run start:dev
+# Production build
+npm run build
 
-# production mode
-$ npm run start:prod
+# Start production server
+npm run start:prod
 ```
 
-## Run tests
+## 🧪 Testing
 
 ```bash
-# unit tests
-$ npm run test
+# Run unit and integration tests
+npm test
 
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+# Run tests with coverage
+npm run test:cov
 ```
 
-## Deployment
+## 📚 API Documentation (Swagger)
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
-
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
-
-```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
+When the server is running, the interactive OpenAPI/Swagger documentation is available at:
 ```
-
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
-
-## Resources
-
-Check out a few resources that may come in handy when working with NestJS:
-
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
-
-## Support
-
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
-
-## Stay in touch
-
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
-
-## License
-
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+http://localhost:3001/api/docs
+```

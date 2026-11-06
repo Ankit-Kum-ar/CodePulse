@@ -24,6 +24,9 @@ import { SettingsModule } from './modules/settings/settings.module';
 import { CacheModule } from '@nestjs/cache-manager';
 import { BullModule } from '@nestjs/bullmq';
 import { ScheduleModule } from '@nestjs/schedule';
+import { ThrottlerModule } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
+import { CustomThrottlerGuard } from './common/guards/custom-throttler.guard';
 
 @Module({
   imports: [
@@ -45,6 +48,13 @@ import { ScheduleModule } from '@nestjs/schedule';
       password: process.env.REDIS_PASSWORD || undefined,
       tls: process.env.REDIS_PASSWORD ? {} : undefined,
     }),
+    ThrottlerModule.forRoot([
+      {
+        name: 'default',
+        ttl: 60000,
+        limit: 60,
+      },
+    ]),
     PrismaModule,
     AuthModule,
     UsersModule,
@@ -66,6 +76,12 @@ import { ScheduleModule } from '@nestjs/schedule';
     SettingsModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_GUARD,
+      useClass: CustomThrottlerGuard,
+    },
+  ],
 })
 export class AppModule {}

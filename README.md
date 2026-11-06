@@ -566,7 +566,7 @@ sequenceDiagram
 
 ## 10. Caching & Performance Architecture
 
-### 10.1 Three-Layer Caching Strategy
+### 10.1 Multi-Layer Caching & Rate Limiting Strategy
 
 ```
 ┌──────────────────────────────────────────────────┐
@@ -577,27 +577,53 @@ sequenceDiagram
 └──────────────┬───────────────────────────────────┘
                │
 ┌──────────────▼───────────────────────────────────┐
-│ Layer 2: Next.js Data Cache (Server)             │
+│ Layer 2: Next.js Data Cache (Server Proxy)       │
 │ • revalidate: 3600 seconds (1 hour)              │
 │ • Tagged by username (github-{username})          │
 │ • Invalidated by Refresh button (force=true)     │
-│ • Reduces GitHub API calls by ~90%               │
 └──────────────┬───────────────────────────────────┘
                │
 ┌──────────────▼───────────────────────────────────┐
-│ Layer 3: GitHub API (External)                   │
+│ Layer 3: NestJS Backend Cache & Throttler        │
+│ • @nestjs/throttler: 30-60 req/min (IP or User)  │
+│ • @nestjs/cache-manager: 5–10 min TTL            │
+│ • Invalidation: ?force=true or DELETE /cache/:id │
+└──────────────┬───────────────────────────────────┘
+               │
+┌──────────────▼───────────────────────────────────┐
+│ Layer 4: GitHub API (External)                   │
 │ • Rate: 60/hr (no token) or 5,000/hr (with)     │
 │ • Real-time data from GitHub                     │
 └──────────────────────────────────────────────────┘
 ```
 
-### 10.2 Cache Invalidation
+### 10.2 NestJS GitHub Proxy Routes & Caching Strategy
+
+The NestJS backend provides dedicated cached and rate-limited endpoints for GitHub data under `/api/v1/github`:
+
+| Endpoint | Cache Key | TTL | Rate Limit | Description |
+|---|---|---|---|---|
+| `GET /api/v1/github/developer/:username` | `github:developer:{username}` | **5 minutes** (300s) | 30 req/min | Aggregated developer metrics (score, habit, persona, stats) |
+| `GET /api/v1/github/profile/:username` | `github:profile:{username}` | **10 minutes** (600s) | 30 req/min | Public GitHub profile metadata |
+| `GET /api/v1/github/repos/:username` | `github:repos:{username}:{limit}` | **5 minutes** (300s) | 30 req/min | Public repository metadata & statistics |
+| `GET /api/v1/github/events/:username` | `github:events:{username}:{limit}` | **3 minutes** (180s) | 30 req/min | Recent public user activity events |
+| `DELETE /api/v1/github/cache/:username` | All user keys | N/A | 10 req/min | Evicts all cached entries for the specified user |
+| `POST /api/v1/github/sync` | `github:developer:{username}` | N/A | 10 req/min | Busts cache and syncs latest profile data |
+
+### 10.3 Adaptive Rate Limiting (`@nestjs/throttler`)
+
+- **Authenticated Users**: Rate limits are tracked and isolated per authenticated user ID (`user-{id}`) via JWT tokens.
+- **Anonymous / Public Queries**: Tracked per client IP address (`ip-{ip}`), with automatic detection of `X-Forwarded-For` reverse proxy headers.
+- **Protection**: Prevents quota exhaustion on upstream GitHub APIs during traffic surges; returns `HTTP 429 Too Many Requests` when limits are exceeded.
+
+### 10.4 Cache Invalidation
 
 | Trigger | What Happens |
-|---------|-------------|
-| Normal Search | Checks Next.js Data Cache → if valid (< 1 hour old), returns cached data instantly (0 GitHub API calls). |
-| Refresh Button (🔄) | Calls `revalidateTag("github-{username}")` → **deletes** old cache → fetches fresh data from GitHub → stores new data in cache. |
-| After 1 Hour | Cache automatically expires → next request triggers a fresh fetch from GitHub. |
+|---|---|
+| Normal Request | Checks cache → if valid (< TTL), returns cached data instantly with `cached: true` (0 GitHub API calls). |
+| Refresh / Force (`?force=true` / `?refresh=true`) | Evicts the specified cache key → fetches fresh data from GitHub → caches fresh data with TTL. |
+| Purge Endpoint (`DELETE /api/v1/github/cache/:username`) | Clears all cached keys for that developer across developer, profile, repos, and events. |
+| TTL Expiration | Cache key automatically expires after 5–10 minutes, ensuring data freshnes without manual intervention. |
 
 ---
 

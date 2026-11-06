@@ -22,6 +22,33 @@ export async function GET(request: Request) {
     githubToken = authHeader.split(' ')[1];
   }
 
+  // Attempt to delegate to NestJS backend proxy if available
+  const backendBase = process.env.INTERNAL_API_URL || process.env.NEXT_PUBLIC_API_URL;
+  if (backendBase) {
+    try {
+      const backendUrl = `${backendBase.replace(/\/$/, '')}/github/developer?username=${encodeURIComponent(username)}${force ? '&force=true' : ''}`;
+      const backendRes = await fetch(backendUrl, {
+        headers: authHeader ? { Authorization: authHeader } : {},
+        signal: AbortSignal.timeout(6000),
+      });
+
+      if (backendRes.status === 429) {
+        return NextResponse.json(
+          { error: 'Rate limit exceeded. Please wait a moment before trying again.' },
+          { status: 429 },
+        );
+      }
+
+      if (backendRes.ok) {
+        const payload = await backendRes.json();
+        const data = payload && payload.data ? payload.data : payload;
+        return NextResponse.json(data);
+      }
+    } catch {
+      // Fallback to local fetching below
+    }
+  }
+
   // Caching strategy: 1 hour (3600s) default, tied to a unique tag for this user
   const fetchOptions: RequestInit = {
     headers: githubToken ? { Authorization: `Bearer ${githubToken}` } : {},
