@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { motion } from "motion/react";
@@ -14,7 +14,8 @@ import {
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { cn } from "@/lib/utils";
-import { mockNotifications } from "@/lib/mock-data";
+import { useNotifications } from "@/hooks/api/use-notifications";
+import { NotificationDropdown } from "@/components/layout/notification-dropdown";
 import { useCurrentUser } from "@/hooks/api/use-auth";
 import { NAV_ITEMS } from "@/lib/constants";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
@@ -99,36 +100,81 @@ function SearchTrigger({ onOpen }: SearchTriggerProps) {
 // ===========================
 
 function NotificationBell() {
-  const unreadCount = mockNotifications.filter((n) => !n.isRead).length;
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const { notifications, unreadCount, markAsRead, markAllAsRead } =
+    useNotifications();
+
+  // Close dropdown when clicking outside or pressing Escape
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
+        setIsOpen(false);
+      }
+    }
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setIsOpen(false);
+      }
+    }
+
+    if (isOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+      document.addEventListener("keydown", handleKeyDown);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isOpen]);
 
   return (
-    <motion.button
-      id="topbar-notifications"
-      className={cn(
-        "relative flex h-9 w-9 items-center justify-center rounded-xl",
-        "text-muted-foreground transition-colors",
-        "hover:bg-white/[0.06] hover:text-foreground"
-      )}
-      whileHover={{ scale: 1.05 }}
-      whileTap={{ scale: 0.95 }}
-      aria-label={`${unreadCount} unread notifications`}
-    >
-      <Bell className="h-[18px] w-[18px]" />
+    <div className="relative" ref={dropdownRef}>
+      <motion.button
+        id="topbar-notifications"
+        onClick={() => setIsOpen((prev) => !prev)}
+        className={cn(
+          "relative flex h-9 w-9 items-center justify-center rounded-xl transition-colors cursor-pointer",
+          isOpen
+            ? "bg-white/[0.08] text-foreground ring-1 ring-primary/40"
+            : "text-muted-foreground hover:bg-white/[0.06] hover:text-foreground"
+        )}
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
+        aria-label={`${unreadCount} unread notifications`}
+        aria-expanded={isOpen}
+      >
+        <Bell className="h-[18px] w-[18px]" />
 
-      {unreadCount > 0 && (
-        <motion.div
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          className={cn(
-            "absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full px-1",
-            "bg-gradient-to-br from-purple-500 to-blue-500 text-[10px] font-bold text-white",
-            "ring-2 ring-[#070B14]"
-          )}
-        >
-          {unreadCount}
-        </motion.div>
-      )}
-    </motion.button>
+        {unreadCount > 0 && (
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            className={cn(
+              "absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full px-1",
+              "bg-gradient-to-br from-purple-500 to-blue-500 text-[10px] font-bold text-white",
+              "ring-2 ring-[#070B14]"
+            )}
+          >
+            {unreadCount}
+          </motion.div>
+        )}
+      </motion.button>
+
+      <NotificationDropdown
+        isOpen={isOpen}
+        onClose={() => setIsOpen(false)}
+        notifications={notifications}
+        unreadCount={unreadCount}
+        onMarkAsRead={markAsRead}
+        onMarkAllAsRead={markAllAsRead}
+      />
+    </div>
   );
 }
 
