@@ -75,19 +75,21 @@ function SearchTrigger({ onOpen }: SearchTriggerProps) {
   return (
     <motion.button
       id="topbar-search-trigger"
+      type="button"
       onClick={onOpen}
+      aria-label="Search dashboard (Press Command K)"
       className={cn(
         "group flex h-9 items-center gap-2 rounded-xl border border-white/[0.06] px-3",
         "bg-white/[0.03] text-muted-foreground transition-colors",
-        "hover:border-white/[0.1] hover:bg-white/[0.06] hover:text-foreground",
+        "hover:border-white/[0.1] hover:bg-white/[0.06] hover:text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40",
         "w-64"
       )}
       whileHover={{ scale: 1.01 }}
       whileTap={{ scale: 0.99 }}
     >
-      <Search className="h-3.5 w-3.5" />
+      <Search className="h-3.5 w-3.5" aria-hidden="true" />
       <span className="flex-1 text-left text-sm">Search...</span>
-      <kbd className="pointer-events-none flex h-5 items-center gap-0.5 rounded-md border border-white/[0.08] bg-white/[0.04] px-1.5 font-mono text-[10px] text-muted-foreground">
+      <kbd className="pointer-events-none flex h-5 items-center gap-0.5 rounded-md border border-white/[0.08] bg-white/[0.04] px-1.5 font-mono text-[10px] text-muted-foreground" aria-hidden="true">
         <Command className="h-2.5 w-2.5" />K
       </kbd>
     </motion.button>
