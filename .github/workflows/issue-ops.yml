@@ -1,0 +1,236 @@
+name: 🤖 Issue Lifecycle & Auto-Assignment Bot
+
+on:
+  issues:
+    types: [opened]
+  issue_comment:
+    types: [created]
+
+permissions:
+  issues: write
+  pull-requests: read
+
+jobs:
+  handle-issue-ops:
+    name: ⚡ Issue Bot
+    runs-on: ubuntu-latest
+    steps:
+      - name: Process Issue Lifecycle or Comment
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const sender = context.payload.sender;
+
+            // Ignore actions triggered by bots to avoid loops
+            if (sender.type === 'Bot' || sender.login.includes('bot') || sender.login === 'github-actions[bot]') {
+              return;
+            }
+
+            const eventName = context.eventName;
+
+            // ========================================================
+            // 1. ISSUE OPENED: Welcome Comment & Mandatory Tags
+            // ========================================================
+            if (eventName === 'issues' && context.payload.action === 'opened') {
+              const issue = context.payload.issue;
+              console.log(`New issue #${issue.number} opened by @${issue.user.login}`);
+
+              // Ensure mandatory 'nsoc26' label is present
+              const currentLabels = issue.labels.map(l => (typeof l === 'string' ? l : l.name).toLowerCase());
+              if (!currentLabels.includes('nsoc26')) {
+                await github.rest.issues.addLabels({
+                  owner,
+                  repo,
+                  issue_number: issue.number,
+                  labels: ['nsoc26']
+                });
+              }
+
+              // Post informative welcome & assignment instruction comment
+              const welcomeComment = `### 👋 Welcome to CodePulse & Nexus Spring of Code (NSoC'26)! 🎉\n\n` +
+                `Thank you @${issue.user.login} for creating this issue!\n\n` +
+                `#### 📌 How to get assigned to this issue:\n` +
+                `- If you would like to work on this, comment below with **\`/assign\`** or **\`I want to work on this\`**.\n` +
+                `- Our bot will **automatically assign** you if the issue is currently unassigned.\n` +
+                `- **Collision Guard:** Only **one contributor** can be assigned to an issue. Once assigned, other requests will be declined.\n` +
+                `- **7-Day Rule:** Once assigned, you will have **7 days** to submit a PR linking this issue (\`Closes #${issue.number}\`). Inactive issues are unassigned after 7 days.\n` +
+                `- **Level Allocation:** Maintainer (@code-with-abhi-i5) will review and confirm the official Level label (\`level1\`, \`level2\`, or \`level3\`) according to NSoC'26 rules.\n\n` +
+                `*Happy open-source journey! 🚀*`;
+
+              await github.rest.issues.createComment({
+                owner,
+                repo,
+                issue_number: issue.number,
+                body: welcomeComment
+              });
+              return;
+            }
+
+            // ========================================================
+            // 2. ISSUE COMMENT: Auto-Assign & Strict Collision Check
+            // ========================================================
+            if (eventName === 'issue_comment' && context.payload.action === 'created') {
+              // Ensure this is an issue and not a pull request
+              if (context.payload.issue.pull_request) {
+                return;
+              }
+
+              const issue = context.payload.issue;
+              if (issue.state !== 'open') {
+                return;
+              }
+
+              const comment = context.payload.comment;
+              const commentBody = (comment.body || "").trim();
+              const commenter = comment.user.login;
+              const isAdmin = commenter.toLowerCase() === owner.toLowerCase();
+
+              const assignCmdPattern = /(?:^|\s)(?:\/assign|!assign|\.take|\/claim|i\s+want\s+to\s+work\s+on\s+this|please\s+assign\s+me|assign\s+this\s+to\s+me|can\s+i\s+work\s+on\s+this|i\s+would\s+like\s+to\s+work\s+on\s+this)(?:\b|$)/i;
+              const adminAssignPattern = /^\/assign\s+@?([a-zA-Z0-9-]+)/i;
+              const adminUnassignPattern = /^\/unassign(?:\s+@?([a-zA-Z0-9-]+))?/i;
+
+              // --- A. ADMIN EXPLICIT UNASSIGN ---
+              if (isAdmin && adminUnassignPattern.test(commentBody)) {
+                const match = commentBody.match(adminUnassignPattern);
+                const targetUser = match[1];
+                const currentAssignees = (issue.assignees || []).map(a => a.login);
+
+                if (targetUser) {
+                  await github.rest.issues.removeAssignees({
+                    owner,
+                    repo,
+                    issue_number: issue.number,
+                    assignees: [targetUser]
+                  });
+                } else if (currentAssignees.length > 0) {
+                  await github.rest.issues.removeAssignees({
+                    owner,
+                    repo,
+                    issue_number: issue.number,
+                    assignees: currentAssignees
+                  });
+                }
+
+                try {
+                  await github.rest.issues.removeLabel({
+                    owner,
+                    repo,
+                    issue_number: issue.number,
+                    name: 'assigned'
+                  });
+                } catch (e) {}
+
+                await github.rest.issues.createComment({
+                  owner,
+                  repo,
+                  issue_number: issue.number,
+                  body: `ℹ️ **Issue Unassigned:** @${commenter} has unassigned this issue. It is now open for new contributors!`
+                });
+                return;
+              }
+
+              // --- B. ADMIN EXPLICIT ASSIGN (@user) ---
+              if (isAdmin && adminAssignPattern.test(commentBody)) {
+                const match = commentBody.match(adminAssignPattern);
+                const targetUser = match[1];
+
+                await github.rest.issues.addAssignees({
+                  owner,
+                  repo,
+                  issue_number: issue.number,
+                  assignees: [targetUser]
+                });
+
+                await github.rest.issues.addLabels({
+                  owner,
+                  repo,
+                  issue_number: issue.number,
+                  labels: ['assigned']
+                });
+
+                await github.rest.issues.createComment({
+                  owner,
+                  repo,
+                  issue_number: issue.number,
+                  body: `🎉 **Issue Assigned:** Project Admin @${commenter} has assigned this issue to @${targetUser}!\n\n` +
+                    `Please submit your PR within **7 days** with \`Closes #${issue.number}\`. Happy coding!`
+                });
+                return;
+              }
+
+              // --- C. CONTRIBUTOR SELF-ASSIGN REQUEST ---
+              if (assignCmdPattern.test(commentBody)) {
+                const currentAssignees = issue.assignees || [];
+
+                // 1. If issue is already assigned
+                if (currentAssignees.length > 0) {
+                  const assignedLogins = currentAssignees.map(a => a.login.toLowerCase());
+
+                  if (assignedLogins.includes(commenter.toLowerCase())) {
+                    await github.rest.issues.createComment({
+                      owner,
+                      repo,
+                      issue_number: issue.number,
+                      body: `👋 Hi @${commenter}! You are already officially assigned to this issue. Feel free to ask if you have any questions!`
+                    });
+                    return;
+                  }
+
+                  // DECLINE REQUEST (ISSUE ALREADY TAKEN)
+                  const primaryAssignee = currentAssignees[0].login;
+                  const declineComment = `### ❌ Issue Already Assigned\n\n` +
+                    `Hello @${commenter},\n\n` +
+                    `Thank you for your interest! However, this issue has already been assigned to **@${primaryAssignee}**.\n\n` +
+                    `Under **Nexus Spring of Code (NSoC) 2026** rules:\n` +
+                    `- Only **one contributor** is assigned per issue to prevent duplicate effort and merge conflicts.\n` +
+                    `- We cannot assign multiple contributors to the same task.\n\n` +
+                    `👉 **What you can do:**\n` +
+                    `- Check out our [Open Issues](https://github.com/${owner}/${repo}/issues?q=is%3Aissue+is%3Aopen+no%3Aassignee) for other unassigned tasks.\n` +
+                    `- Look for issues labeled with \`good first issue\` or \`help wanted\`.\n\n` +
+                    `*Thank you for understanding and supporting fair open-source collaboration!* ✨`;
+
+                  await github.rest.issues.createComment({
+                    owner,
+                    repo,
+                    issue_number: issue.number,
+                    body: declineComment
+                  });
+                  return;
+                }
+
+                // 2. Issue is unassigned -> ASSIGN IT AUTOMATICALLY!
+                console.log(`Auto-assigning issue #${issue.number} to @${commenter}`);
+
+                await github.rest.issues.addAssignees({
+                  owner,
+                  repo,
+                  issue_number: issue.number,
+                  assignees: [commenter]
+                });
+
+                await github.rest.issues.addLabels({
+                  owner,
+                  repo,
+                  issue_number: issue.number,
+                  labels: ['assigned']
+                });
+
+                const successComment = `### 🎉 Issue Assigned to @${commenter}!\n\n` +
+                  `You have been officially assigned to this issue under **Nexus Spring of Code (NSoC) 2026**.\n\n` +
+                  `#### 📋 Contributor Guidelines:\n` +
+                  `1. **7-Day Activity Window:** Please open your Pull Request within **7 days** or share an active progress update. Inactive assignments are automatically released after 7 days.\n` +
+                  `2. **Branching:** Work on a dedicated branch (e.g. \`git checkout -b feature/issue-${issue.number}\`). Do **not** commit to a shared branch.\n` +
+                  `3. **Linking:** Link your PR by adding **\`Closes #${issue.number}\`** in your PR description.\n` +
+                  `4. **Quality:** Maintain high code quality, follow \`.gitignore\` rules, and write clear commits.\n\n` +
+                  `*The Project Admin (@code-with-abhi-i5) will review your PR and confirm points allocation.* Good luck! 🚀`;
+
+                await github.rest.issues.createComment({
+                  owner,
+                  repo,
+                  issue_number: issue.number,
+                  body: successComment
+                });
+              }
+            }
