@@ -11,6 +11,7 @@ import {
   Loader2, X, Tent, Crown, AlertCircle, Moon, Sun, Sunset, Code2, Key, RefreshCw
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Skeleton } from "@/components/ui/skeleton";
 
 // Types
 interface DevStats {
@@ -46,14 +47,7 @@ interface DevData {
 const STORAGE_KEY = "codepulse_recent_comparisons";
 
 const SkeletonShimmer = ({ className }: { className?: string }) => (
-  <div className={cn("relative overflow-hidden bg-gray-200 dark:bg-[#1a1a1a]", className)}>
-    <motion.div
-      initial={{ x: "-100%" }}
-      animate={{ x: "100%" }}
-      transition={{ repeat: Infinity, duration: 1.5, ease: "linear" }}
-      className="absolute inset-0 z-10 bg-gradient-to-r from-transparent via-white/60 dark:via-white/10 to-transparent w-[150%]"
-    />
-  </div>
+  <Skeleton className={className} />
 );
 
 function CompareDashboard() {

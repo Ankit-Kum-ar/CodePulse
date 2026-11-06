@@ -6,6 +6,7 @@ import { useInView } from "react-intersection-observer";
 import { useLeaderboardInfinite, useUserProfileSearch } from "@/hooks/api/use-leaderboard";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Trophy, Search, Loader2, Users, Flag, Star, GitFork, BookOpen, Clock } from "lucide-react";
+import { LeaderboardRowSkeleton, LeaderboardTableSkeleton } from "@/components/leaderboard/leaderboard-skeleton";
 
 const GithubIcon = ({ className }: { className?: string }) => (
   <svg viewBox="0 0 24 24" fill="currentColor" stroke="none" className={className}>
@@ -94,11 +95,7 @@ export default function LeaderboardPage() {
       {/* Main Content */}
       <div className="max-w-6xl mx-auto">
         {(isLoading || isSearchLoading) ? (
-          <div className="space-y-3">
-            {[...Array(10)].map((_, i) => (
-              <div key={i} className="h-20 rounded-xl bg-white/5 animate-pulse border border-white/5" />
-            ))}
-          </div>
+          <LeaderboardTableSkeleton count={8} />
         ) : displayUsers.length === 0 ? (
           <div className="text-center py-24 border border-dashed border-white/10 rounded-3xl bg-white/[0.02]">
             <Trophy className="w-12 h-12 text-muted-foreground/30 mx-auto mb-4" />
@@ -189,10 +186,18 @@ export default function LeaderboardPage() {
               })}
             </AnimatePresence>
             
-            {/* Infinite Scroll Trigger */}
+            {/* Infinite Scroll Trigger with Coordinated Skeleton State */}
             {!searchQuery && hasNextPage && (
-              <div ref={ref} className="py-8 flex justify-center">
-                {isFetchingNextPage && <Loader2 className="w-6 h-6 animate-spin text-primary" />}
+              <div ref={ref} className="pt-3 pb-6">
+                {isFetchingNextPage ? (
+                  <div className="space-y-3" role="status" aria-label="Loading more developers">
+                    <LeaderboardRowSkeleton />
+                    <LeaderboardRowSkeleton />
+                    <LeaderboardRowSkeleton />
+                  </div>
+                ) : (
+                  <div className="h-8" />
+                )}
               </div>
             )}
           </div>

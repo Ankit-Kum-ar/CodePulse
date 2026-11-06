@@ -7,6 +7,7 @@ import { BattleSetup } from "@/components/battles/battle-setup";
 import { BattleIntro } from "@/components/battles/battle-intro";
 import { BattleRounds } from "@/components/battles/battle-rounds";
 import { BattleReport } from "@/components/battles/battle-report";
+import { BattleMatchmakingSkeleton } from "@/components/battles/battle-skeleton";
 
 type BattlePhase = "SETUP" | "INTRO" | "ROUNDS" | "REPORT";
 
@@ -68,13 +69,29 @@ export default function BattlesPage() {
           </motion.div>
         )}
 
-        {phase === "INTRO" && setupUsernames && (
+        {phase === "INTRO" && setupUsernames && !isIntroFinished && (
           <BattleIntro 
             key="intro"
             p1Username={setupUsernames.p1}
             p2Username={setupUsernames.p2}
             onIntroComplete={handleIntroComplete}
           />
+        )}
+
+        {phase === "INTRO" && setupUsernames && isIntroFinished && !ghostBattleData && (
+          <motion.div
+            key="matchmaking-skeleton"
+            initial={{ opacity: 0, scale: 0.98 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.98 }}
+            className="pt-6"
+          >
+            <BattleMatchmakingSkeleton
+              p1Username={setupUsernames.p1}
+              p2Username={setupUsernames.p2}
+              battleType={setupUsernames.battleType}
+            />
+          </motion.div>
         )}
 
         {phase === "ROUNDS" && ghostBattleData && (
