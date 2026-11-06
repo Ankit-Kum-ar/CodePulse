@@ -492,6 +492,30 @@ function MobileSidebar() {
             <SidebarLogo collapsed={false} />
           </div>
 
+          {/* Mobile Drawer Command Palette Search Trigger */}
+          <div className="px-3 pb-2">
+            <button
+              id="mobile-drawer-search-trigger"
+              onClick={() => {
+                setOpen(false);
+                document.dispatchEvent(
+                  new KeyboardEvent("keydown", {
+                    key: "k",
+                    metaKey: true,
+                    bubbles: true,
+                  })
+                );
+              }}
+              className="flex w-full items-center gap-2.5 rounded-xl border border-white/[0.08] bg-white/[0.03] px-3 py-2 text-sm text-muted-foreground transition-colors hover:border-white/[0.15] hover:bg-white/[0.06] hover:text-foreground"
+            >
+              <Search className="h-4 w-4 text-purple-400" />
+              <span className="flex-1 text-left text-xs">Search repos & battles...</span>
+              <kbd className="rounded border border-white/[0.08] bg-white/[0.04] px-1.5 py-0.5 font-mono text-[10px]">
+                ⌘K
+              </kbd>
+            </button>
+          </div>
+
           {/* Navigation */}
           <nav className="custom-scrollbar flex-1 overflow-y-auto px-2 py-4">
             <div className="space-y-6">
