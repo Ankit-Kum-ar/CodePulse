@@ -1,12 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { Search, ChevronDown, Wand2, Swords, Sparkles, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface BattleSetupProps {
   onStart: (p1: string, p2: string, battleType: string) => void;
+  initialPlayer1?: string;
+  initialPlayer2?: string;
 }
 
 const BATTLE_TYPES = [
@@ -18,11 +20,24 @@ const BATTLE_TYPES = [
   { id: "AI Battle", icon: Sparkles, color: "text-cyan-500" },
 ];
 
-export function BattleSetup({ onStart }: BattleSetupProps) {
-  const [player1, setPlayer1] = useState("");
-  const [player2, setPlayer2] = useState("");
+export function BattleSetup({
+  onStart,
+  initialPlayer1 = "",
+  initialPlayer2 = "",
+}: BattleSetupProps) {
+  const [player1, setPlayer1] = useState(initialPlayer1);
+  const [player2, setPlayer2] = useState(initialPlayer2);
   const [battleType, setBattleType] = useState(BATTLE_TYPES[0]);
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  
+  // Update state when initial props change
+  useEffect(() => {
+    if (initialPlayer1) setPlayer1(initialPlayer1);
+  }, [initialPlayer1]);
+
+  useEffect(() => {
+    if (initialPlayer2) setPlayer2(initialPlayer2);
+  }, [initialPlayer2]);
   
   // focused states for some extra glow
   const [focusedInput, setFocusedInput] = useState<1 | 2 | null>(null);
