@@ -292,100 +292,104 @@ export default function SettingsPage() {
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <label className="text-sm font-medium mb-1.5 block">
-                      Full Name
-                    </label>
+                    <label htmlFor="settings-name-input" className="text-sm font-medium mb-1.5 block">Full Name</label>
                     <div className="relative">
-                      <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
                       <input
+                        id="settings-name-input"
                         type="text"
                         name="name"
-                        defaultValue={displayUser.name || ""}
-                        className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+                        maxLength={50}
+                        defaultValue={displayUser.name || ''}
+                        placeholder="Your full name"
+                        className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all placeholder:text-muted-foreground/50"
                       />
                     </div>
                   </div>
                   <div>
-                    <label className="text-sm font-medium mb-1.5 block">
-                      Username
-                    </label>
+                    <label htmlFor="settings-username-input" className="text-sm font-medium mb-1.5 block">Username</label>
                     <div className="relative">
-                      <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
                       <input
+                        id="settings-username-input"
                         type="text"
                         name="username"
                         defaultValue={displayUser.username}
                         disabled
+                        aria-disabled="true"
                         className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-sm opacity-50 cursor-not-allowed"
                       />
                     </div>
                   </div>
                   <div>
-                    <label className="text-sm font-medium mb-1.5 block">
-                      Email
-                    </label>
+                    <label htmlFor="settings-email-input" className="text-sm font-medium mb-1.5 block">Email</label>
                     <div className="relative">
-                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
                       <input
+                        id="settings-email-input"
                         type="email"
                         name="email"
-                        defaultValue={displayUser.email || ""}
-                        className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+                        defaultValue={displayUser.email || ''}
+                        placeholder="you@domain.com"
+                        className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all placeholder:text-muted-foreground/50"
                       />
                     </div>
                   </div>
                   <div>
-                    <label className="text-sm font-medium mb-1.5 block">
-                      Location
-                    </label>
+                    <label htmlFor="settings-location-input" className="text-sm font-medium mb-1.5 block">Location</label>
                     <div className="relative">
-                      <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
                       <input
+                        id="settings-location-input"
                         type="text"
                         name="location"
-                        defaultValue={displayUser.location || ""}
-                        className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+                        maxLength={60}
+                        defaultValue={displayUser.location || ''}
+                        placeholder="City, Country"
+                        className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all placeholder:text-muted-foreground/50"
                       />
                     </div>
                   </div>
                   <div>
-                    <label className="text-sm font-medium mb-1.5 block">
-                      Company
-                    </label>
+                    <label htmlFor="settings-company-input" className="text-sm font-medium mb-1.5 block">Company</label>
                     <div className="relative">
-                      <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
                       <input
+                        id="settings-company-input"
                         type="text"
                         name="company"
-                        defaultValue={displayUser.company || ""}
-                        className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+                        maxLength={60}
+                        defaultValue={displayUser.company || ''}
+                        placeholder="Organization or company"
+                        className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all placeholder:text-muted-foreground/50"
                       />
                     </div>
                   </div>
                   <div>
-                    <label className="text-sm font-medium mb-1.5 block">
-                      Website
-                    </label>
+                    <label htmlFor="settings-website-input" className="text-sm font-medium mb-1.5 block">Website</label>
                     <div className="relative">
-                      <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                      <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" aria-hidden="true" />
                       <input
+                        id="settings-website-input"
                         type="url"
                         name="website"
-                        defaultValue={displayUser.website || ""}
-                        className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
+                        defaultValue={displayUser.website || ''}
+                        placeholder="https://yourportfolio.dev"
+                        className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all placeholder:text-muted-foreground/50"
                       />
                     </div>
                   </div>
                 </div>
                 <div className="mt-4">
-                  <label className="text-sm font-medium mb-1.5 block">
-                    Bio
-                  </label>
+                  <label htmlFor="settings-bio-input" className="text-sm font-medium mb-1.5 block">Bio</label>
                   <textarea
+                    id="settings-bio-input"
                     name="bio"
-                    defaultValue={displayUser.bio || ""}
+                    maxLength={300}
+                    defaultValue={displayUser.bio || ''}
+                    placeholder="Tell the community a little bit about yourself..."
                     rows={3}
-                    className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all resize-none"
+                    className="w-full px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-sm focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all resize-none placeholder:text-muted-foreground/50"
                   />
                 </div>
               </form>
