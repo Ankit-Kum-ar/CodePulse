@@ -75,6 +75,22 @@ jobs:
             }
 
             // ==========================================
+            // 1D. CONVENTIONAL COMMITS PR TITLE VALIDATION
+            // ==========================================
+            const prTitle = (pr.title || "").trim();
+            const conventionalPattern = /^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)(?:\([a-zA-Z0-9_\-\/.]+\))?!?: .+/;
+            if (!conventionalPattern.test(prTitle)) {
+              violations.push(`❌ **Non-Conventional PR Title**: NSoC standards require [Conventional Commits](https://www.conventionalcommits.org/) PR titles (e.g. \`feat(auth): add discord oauth\` or \`fix(topbar): resolve focus ring\`). Current title: \`${prTitle}\``);
+            }
+
+            // ==========================================
+            // 1E. MERGE CONFLICT / DIRTY BRANCH CHECK
+            // ==========================================
+            if (pr.mergeable === false || pr.mergeable_state === 'dirty') {
+              violations.push("❌ **Merge Conflict Detected**: This branch has conflicts with `main`. Please rebase your branch:\n```bash\ngit fetch origin\ngit rebase origin/main\n# resolve conflicts\ngit push --force-with-lease\n```");
+            }
+
+            // ==========================================
             // 2. CHECK 0-LINE / TRIVIAL EDITS (Section 8 & 9)
             // ==========================================
             if (pr.changed_files === 0 || (pr.additions + pr.deletions === 0)) {
@@ -270,6 +286,8 @@ jobs:
                 `🎉 **All NSoC'26 Quality Checks Passed!**\n\n` +
                 `- ✅ Linked issue verified\n` +
                 `- ✅ \`nsoc26\` and valid \`${detectedLevel || 'level'}\` label applied\n` +
+                `- ✅ Conventional PR title validated\n` +
+                `- ✅ Zero merge conflicts with \`main\`\n` +
                 `- ✅ Contributor @${pr.user.login} assigned as PR Assignee\n` +
                 `- ✅ Review requested from maintainer @${maintainer}\n` +
                 `- ✅ \`.gitignore\` rules respected (no build/env files)\n` +

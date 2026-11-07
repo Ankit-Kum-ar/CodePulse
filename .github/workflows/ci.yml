@@ -1,4 +1,4 @@
-name: 🧪 CI — Build & Typecheck Verification
+name: 🧪 CI — Build, Tests & Typecheck Verification
 
 on:
   pull_request:
@@ -12,25 +12,37 @@ concurrency:
 
 jobs:
   frontend-check:
-    name: 🎨 Frontend Typecheck & Build
+    name: 🎨 Frontend Typecheck, Tests & Build
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout Code
+      - name: 📥 Checkout Code
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
+      - name: ⚙️ Setup Node.js (v20)
         uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: 'npm'
 
-      - name: Install Frontend Dependencies
+      - name: 📦 Install Frontend Dependencies
         run: npm ci
 
-      - name: Run TypeScript Check
+      - name: ⚡ Restore Next.js Build Cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ${{ github.workspace }}/.next/cache
+          key: ${{ runner.os }}-nextjs-${{ hashFiles('**/package-lock.json') }}-${{ hashFiles('src/**/*.{js,jsx,ts,tsx}') }}
+          restore-keys: |
+            ${{ runner.os }}-nextjs-${{ hashFiles('**/package-lock.json') }}-
+
+      - name: 🔍 TypeScript Verification
         run: npx tsc --noEmit
 
-      - name: Verify Frontend Build
+      - name: 🧪 Run Vitest Unit & Component Tests
+        run: npx vitest run
+
+      - name: 🚀 Verify Frontend Production Build
         env:
           NEXT_PUBLIC_SUPABASE_URL: "https://placeholder-ci.supabase.co"
           NEXT_PUBLIC_SUPABASE_ANON_KEY: "placeholder-anon-key"
@@ -45,23 +57,22 @@ jobs:
       run:
         working-directory: backend
     steps:
-      - name: Checkout Code
+      - name: 📥 Checkout Code
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
+      - name: ⚙️ Setup Node.js (v20)
         uses: actions/setup-node@v4
         with:
           node-version: 20
 
-      - name: Install Backend Dependencies
+      - name: 📦 Install Backend Dependencies
         run: npm ci || npm install
 
-      - name: Generate Prisma Client
+      - name: 🗄️ Generate Prisma Client
         env:
           DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/postgres"
           DIRECT_URL: "postgresql://postgres:postgres@localhost:5432/postgres"
         run: npx prisma generate
 
-      - name: Verify Backend Build
+      - name: 🚀 Verify Backend Build
         run: npm run build
-
