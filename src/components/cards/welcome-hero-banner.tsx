@@ -36,7 +36,7 @@ export function WelcomeHeroBanner({ user, rating, className }: WelcomeHeroBanner
           >
             <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-xs font-semibold text-purple-300">
               <Sparkles className="w-3.5 h-3.5" />
-              DevBattle Command Center
+              CodePulse Command Center
             </span>
           </motion.div>
 
