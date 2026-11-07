@@ -1,0 +1,107 @@
+name: 🌟 Sync Contributors Wall & Hall of Fame
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: '0 0 * * 0' # Every Sunday midnight
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update-hall-of-fame:
+    name: 🎨 Update README Contributors Wall
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: 👥 Fetch Contributors & Generate Wall
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+
+            console.log(`Fetching all contributors for ${owner}/${repo}...`);
+            const res = await github.rest.repos.listContributors({
+              owner,
+              repo,
+              per_page: 100
+            });
+
+            // Filter out bots
+            const contributors = (res.data || []).filter(c => 
+              c.type !== 'Bot' && 
+              !c.login.includes('[bot]') && 
+              c.login !== 'github-actions'
+            );
+
+            console.log(`Found ${contributors.length} human contributors.`);
+
+            const columnsPerRow = 6;
+            let tableHtml = '<table>\n';
+
+            for (let i = 0; i < contributors.length; i += columnsPerRow) {
+              tableHtml += '  <tr>\n';
+              const slice = contributors.slice(i, i + columnsPerRow);
+
+              for (const c of slice) {
+                const isMaintainer = c.login.toLowerCase() === owner.toLowerCase();
+                const badge = isMaintainer ? '👑 Maintainer' : '💻 Contributor';
+
+                tableHtml += `    <td align="center" width="160px">\n`;
+                tableHtml += `      <a href="https://github.com/${c.login}">\n`;
+                tableHtml += `        <img src="${c.avatar_url}&s=100" width="80px" style="border-radius: 50%;" alt="${c.login}" /><br />\n`;
+                tableHtml += `        <sub><b>@${c.login}</b></sub>\n`;
+                tableHtml += `      </a><br />\n`;
+                tableHtml += `      <sub>${badge}</sub><br />\n`;
+                tableHtml += `      <a href="https://github.com/${owner}/${repo}/commits?author=${c.login}"><sub>🔨 ${c.contributions} commits</sub></a>\n`;
+                tableHtml += `    </td>\n`;
+              }
+
+              tableHtml += '  </tr>\n';
+            }
+            tableHtml += '</table>';
+
+            // Read README.md
+            const readmePath = 'README.md';
+            let readme = fs.readFileSync(readmePath, 'utf8');
+
+            const startTag = '<!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->';
+            const endTag = '<!-- ALL-CONTRIBUTORS-LIST:END -->';
+
+            if (!readme.includes(startTag) || !readme.includes(endTag)) {
+              console.warn("Could not find contributor marker tags in README.md");
+              return;
+            }
+
+            const regex = new RegExp(`${startTag}[\\s\\S]*?${endTag}`);
+            const replacement = `${startTag}\n<!-- prettier-ignore-start -->\n<!-- markdownlint-disable -->\n${tableHtml}\n<!-- markdownlint-restore -->\n<!-- prettier-ignore-end -->\n${endTag}`;
+
+            const updatedReadme = readme.replace(regex, replacement);
+
+            if (updatedReadme !== readme) {
+              fs.writeFileSync(readmePath, updatedReadme, 'utf8');
+              console.log("README.md updated with latest contributors!");
+            } else {
+              console.log("No changes in contributors list.");
+            }
+
+      - name: 🚀 Commit & Push Contributors Wall Update
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          if [[ -n $(git status --porcelain) ]]; then
+            git add README.md
+            git commit -m "chore(contributors): update Hall of Fame contributors wall [skip ci]"
+            git push origin main
+            echo "✅ Contributors Wall successfully committed and pushed to main!"
+          else
+            echo "ℹ️ No changes to commit."
+          fi

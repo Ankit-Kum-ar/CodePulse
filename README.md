@@ -1,9 +1,15 @@
 # ⚔️ CodePulse (DevBattle)
 
 [![Nexus Spring of Code 2026](https://img.shields.io/badge/Nexus_Spring_of_Code-2026_Winter_Edition-blueviolet?style=for-the-badge&logo=github)](https://nsoc.in/)
-[![NSoC'26 Level 1](https://img.shields.io/badge/NSoC'26-Level_1_(3_Pts)-green?style=for-the-badge)](https://nsoc.in/)
-[![NSoC'26 Level 2](https://img.shields.io/badge/NSoC'26-Level_2_(5_Pts)-yellow?style=for-the-badge)](https://nsoc.in/)
-[![NSoC'26 Level 3](https://img.shields.io/badge/NSoC'26-Level_3_(10_Pts)-red?style=for-the-badge)](https://nsoc.in/)
+[![CI Build & Tests](https://img.shields.io/github/actions/workflow/status/code-with-abhi-i5/CodePulse/ci.yml?branch=main&label=CI%20Tests%20%26%20Build&style=for-the-badge&logo=vitest&logoColor=yellow)](https://github.com/code-with-abhi-i5/CodePulse/actions/workflows/ci.yml)
+[![Security Shield](https://img.shields.io/github/actions/workflow/status/code-with-abhi-i5/CodePulse/secret-shield.yml?branch=main&label=Secret%20Shield&style=for-the-badge&logo=securityscorecard&logoColor=green)](https://github.com/code-with-abhi-i5/CodePulse/actions/workflows/secret-shield.yml)
+[![Contributors](https://img.shields.io/github/contributors/code-with-abhi-i5/CodePulse?style=for-the-badge&color=blue&logo=github)](https://github.com/code-with-abhi-i5/CodePulse/graphs/contributors)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=for-the-badge&logo=git)](https://github.com/code-with-abhi-i5/CodePulse/pulls)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
+
+[![NSoC'26 Level 1](https://img.shields.io/badge/NSoC'26-Level_1_(3_Pts)-green?style=flat-square)](https://nsoc.in/)
+[![NSoC'26 Level 2](https://img.shields.io/badge/NSoC'26-Level_2_(5_Pts)-yellow?style=flat-square)](https://nsoc.in/)
+[![NSoC'26 Level 3](https://img.shields.io/badge/NSoC'26-Level_3_(10_Pts)-red?style=flat-square)](https://nsoc.in/)
 
 > 🌟 **Official Participant in Nexus Spring of Code (NSoC / NWoC) 2026 — Winter Edition**  
 > A 45-day open-source program where maintainers and contributors collaborate to build real-world software.  
@@ -981,6 +987,49 @@ npm run dev              # Starts Next.js on port 3000
 
 > [!TIP]
 > This document is a living reference. As new features are added (e.g., Commit Sentiment Analysis, Crown Jewel Matchup), this document should be updated accordingly.
+
+---
+
+## 🌟 Hall of Fame & Contributors Wall
+
+A heartfelt thank you to all the amazing developers contributing to **CodePulse** during **Nexus Spring of Code (NSoC'26)**! You are making developer analytics gamified and accessible to everyone. 🎉
+
+<!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
+<!-- prettier-ignore-start -->
+<!-- markdownlint-disable -->
+<table>
+  <tr>
+    <td align="center" width="160px">
+      <a href="https://github.com/code-with-abhi-i5">
+        <img src="https://avatars.githubusercontent.com/u/195516410?v=4&s=100" width="80px" style="border-radius: 50%;" alt="code-with-abhi-i5" /><br />
+        <sub><b>@code-with-abhi-i5</b></sub>
+      </a><br />
+      <sub>👑 Maintainer</sub><br />
+      <a href="https://github.com/code-with-abhi-i5/CodePulse/commits?author=code-with-abhi-i5"><sub>🔨 61 commits</sub></a>
+    </td>
+    <td align="center" width="160px">
+      <a href="https://github.com/Babin123456">
+        <img src="https://avatars.githubusercontent.com/u/265290994?v=4&s=100" width="80px" style="border-radius: 50%;" alt="Babin123456" /><br />
+        <sub><b>@Babin123456</b></sub>
+      </a><br />
+      <sub>💻 Contributor</sub><br />
+      <a href="https://github.com/code-with-abhi-i5/CodePulse/commits?author=Babin123456"><sub>🔨 17 commits</sub></a>
+    </td>
+    <td align="center" width="160px">
+      <a href="https://github.com/pratikadamas">
+        <img src="https://avatars.githubusercontent.com/u/147491382?v=4&s=100" width="80px" style="border-radius: 50%;" alt="pratikadamas" /><br />
+        <sub><b>@pratikadamas</b></sub>
+      </a><br />
+      <sub>💻 Contributor</sub><br />
+      <a href="https://github.com/code-with-abhi-i5/CodePulse/commits?author=pratikadamas"><sub>🔨 13 commits</sub></a>
+    </td>
+  </tr>
+</table>
+<!-- markdownlint-restore -->
+<!-- prettier-ignore-end -->
+<!-- ALL-CONTRIBUTORS-LIST:END -->
+
+> 💡 **Want to see your face here?** Check out our [`CONTRIBUTING.md`](./CONTRIBUTING.md), pick an open [NSoC Issue](https://github.com/code-with-abhi-i5/CodePulse/issues), and submit your PR! 🚀
 
 ---
 

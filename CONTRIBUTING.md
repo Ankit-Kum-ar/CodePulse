@@ -33,6 +33,9 @@ Every NSoC issue and PR will carry the mandatory **`nsoc26`** tag and exactly ON
 
 > ⚠️ **Level Abuse Warning:** Very small edits (e.g. 10-20 lines or formatting only) will **not** be tagged Level 2 or Level 3. Admin decisions on Level tags are final.
 
+### 🌟 Contributor Recognition & Hall of Fame
+Every contributor with a merged PR is automatically featured on the official **[Contributors Hall of Fame & Avatar Wall](./README.md#--hall-of-fame--contributors-wall)** in our README! Climb the ranks and showcase your open-source journey. 💫
+
 ### 4. 🚫 Prohibited Practices
 - **No Spam or AI-Generated PRs:** PRs consisting of raw ChatGPT/AI boilerplate that was not tested or understood will be marked invalid.
 - **No 0-line or Trivial PRs:** PRs that make meaningless edits just to inflate contribution counts will be closed and reported to NSoC admins.
