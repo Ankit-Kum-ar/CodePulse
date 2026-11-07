@@ -94,9 +94,9 @@ function LoginForm() {
           {/* Logo */}
           <Link href="/" className="flex items-center gap-2">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-blue-600 flex items-center justify-center">
-              <span className="text-white font-bold text-lg">D</span>
+              <span className="text-white font-bold text-lg">C</span>
             </div>
-            <span className="text-xl font-bold gradient-text">DevBattle</span>
+            <span className="text-xl font-bold gradient-text">CodePulse</span>
           </Link>
 
           {/* Center content */}
@@ -144,7 +144,7 @@ function LoginForm() {
             className="glass-card rounded-2xl p-6 max-w-md"
           >
             <p className="text-sm text-muted-foreground italic">
-              &ldquo;DevBattle transformed how I track my coding progress. The gamification
+              &ldquo;CodePulse transformed how I track my coding progress. The gamification
               makes coding addictive in the best way.&rdquo;
             </p>
             <div className="flex items-center gap-3 mt-3">
@@ -169,9 +169,9 @@ function LoginForm() {
           {/* Mobile logo */}
           <div className="lg:hidden mb-8 flex items-center gap-2">
             <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-purple-500 to-blue-600 flex items-center justify-center">
-              <span className="text-white font-bold text-lg">D</span>
+              <span className="text-white font-bold text-lg">C</span>
             </div>
-            <span className="text-xl font-bold gradient-text">DevBattle</span>
+            <span className="text-xl font-bold gradient-text">CodePulse</span>
           </div>
 
           <h1 className="text-3xl font-bold mb-2">Welcome back</h1>
