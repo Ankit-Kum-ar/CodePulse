@@ -1,0 +1,112 @@
+name: 🎉 PR Merge Resolution & Contributor Celebrator
+
+on:
+  pull_request_target:
+    types: [closed]
+
+permissions:
+  pull-requests: write
+  issues: write
+  contents: write
+
+jobs:
+  on-merge:
+    name: 🏆 Handle Post-Merge Resolution & Celebrations
+    if: github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🚀 Resolve Issues & Award NSoC Recognition
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const pr = context.payload.pull_request;
+            const author = pr.user.login;
+            const body = pr.body || "";
+
+            console.log(`Processing post-merge operations for PR #${pr.number} by @${author}...`);
+
+            // 1. Detect linked issue numbers from PR body
+            const matches = body.match(/(?:close|closes|closed|fix|fixes|fixed|resolve|resolves|resolved)?\s*#(\d+)/gi) || [];
+            const linkedIssueNums = new Set();
+            for (const m of matches) {
+              const numMatch = m.match(/\d+/);
+              if (numMatch) {
+                linkedIssueNums.add(parseInt(numMatch[0], 10));
+              }
+            }
+
+            console.log(`Linked issues detected: [${Array.from(linkedIssueNums).join(', ')}]`);
+
+            // 2. Auto-close linked issues if still open
+            for (const issueNum of linkedIssueNums) {
+              try {
+                const issueRes = await github.rest.issues.get({
+                  owner,
+                  repo,
+                  issue_number: issueNum
+                });
+
+                if (issueRes.data && issueRes.data.state === 'open') {
+                  console.log(`Auto-closing linked Issue #${issueNum}...`);
+
+                  await github.rest.issues.update({
+                    owner,
+                    repo,
+                    issue_number: issueNum,
+                    state: 'closed',
+                    state_reason: 'completed'
+                  });
+
+                  await github.rest.issues.createComment({
+                    owner,
+                    repo,
+                    issue_number: issueNum,
+                    body: `🎉 **Issue Resolved!** This issue was completed and closed via merged Pull Request #${pr.number} by @${author}.\n\nThank you for making CodePulse better! 🚀`
+                  });
+                }
+              } catch (err) {
+                console.warn(`Could not process linked issue #${issueNum}:`, err.message);
+              }
+            }
+
+            // 3. Post Celebration Comment on Merged PR
+            const prLabels = pr.labels.map(l => (typeof l === 'string' ? l : l.name).toLowerCase());
+            let levelText = "Level 2 (5 Points)";
+            if (prLabels.includes('level3')) levelText = "Level 3 (10 Points)";
+            else if (prLabels.includes('level1')) levelText = "Level 1 (3 Points)";
+
+            const celebration = `## 🏆 PR Successfully Merged into \`main\`! 🚀\n\n` +
+              `Congratulations @${author}! Your code has been merged into **CodePulse**.\n\n` +
+              `### 🌟 NSoC 2026 Contribution Summary\n` +
+              `| Contributor | Tier / Level | Status |\n` +
+              `| :--- | :--- | :--- |\n` +
+              `| **@${author}** | **${levelText}** | \`Merged & Verified\` |\n\n` +
+              `---\n` +
+              `Keep contributing and climbing the CodePulse leaderboard! 💫`;
+
+            await github.rest.issues.createComment({
+              owner,
+              repo,
+              issue_number: pr.number,
+              body: celebration
+            });
+
+            // 4. Delete feature branch if it belongs to base repo (not a fork)
+            if (pr.head.repo && pr.head.repo.full_name === `${owner}/${repo}`) {
+              const branchName = pr.head.ref;
+              if (branchName !== 'main' && branchName !== 'master') {
+                try {
+                  console.log(`Deleting merged internal branch ${branchName}...`);
+                  await github.rest.git.deleteRef({
+                    owner,
+                    repo,
+                    ref: `heads/${branchName}`
+                  });
+                  console.log(`Branch ${branchName} deleted.`);
+                } catch (delErr) {
+                  console.warn(`Could not delete branch ${branchName}:`, delErr.message);
+                }
+              }
+            }

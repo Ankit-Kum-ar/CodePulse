@@ -1,0 +1,190 @@
+name: ⏰ Ghost Contributor Shield & 7-Day Inactivity Auto-Unassigner
+
+on:
+  schedule:
+    - cron: '0 2 * * *' # Daily at 02:00 UTC
+  workflow_dispatch: # Allow manual trigger anytime
+
+permissions:
+  issues: write
+  pull-requests: read
+
+jobs:
+  check-inactivity:
+    name: 🔍 Scan Assigned Issues for Inactivity
+    runs-on: ubuntu-latest
+    steps:
+      - name: 🛡️ Audit Assigned Issues & Enforce 7-Day Window
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const owner = context.repo.owner;
+            const repo = context.repo.repo;
+            const now = new Date();
+
+            console.log("Checking all open issues for inactive assignments...");
+
+            // 1. Fetch all open issues with assignees
+            let openIssues = [];
+            let page = 1;
+            while (true) {
+              const res = await github.rest.issues.listForRepo({
+                owner,
+                repo,
+                state: 'open',
+                per_page: 100,
+                page
+              });
+              if (!res.data || res.data.length === 0) break;
+              for (const issue of res.data) {
+                if (!issue.pull_request && issue.assignees && issue.assignees.length > 0) {
+                  openIssues.push(issue);
+                }
+              }
+              if (res.data.length < 100) break;
+              page++;
+            }
+
+            console.log(`Found ${openIssues.length} assigned open issues.`);
+
+            // 2. Fetch all PRs to check for linked work
+            let allPRs = [];
+            page = 1;
+            while (true) {
+              const prRes = await github.rest.pulls.list({
+                owner,
+                repo,
+                state: 'all',
+                per_page: 100,
+                page
+              });
+              if (!prRes.data || prRes.data.length === 0) break;
+              allPRs.push(...prRes.data);
+              if (prRes.data.length < 100) break;
+              page++;
+            }
+
+            for (const issue of openIssues) {
+              const issueNum = issue.number;
+              const assignees = issue.assignees.map(a => a.login);
+              console.log(`Checking Issue #${issueNum} (Assigned to: @${assignees.join(', @')})...`);
+
+              // Check if any PR links this issue (e.g. Closes #123, Fixes #123, or #123)
+              const linkRegex = new RegExp(`(?:close|closes|closed|fix|fixes|fixed|resolve|resolves|resolved)?\\s*#${issueNum}\\b`, 'i');
+              const hasLinkedPR = allPRs.some(pr => {
+                const body = pr.body || '';
+                const title = pr.title || '';
+                return linkRegex.test(body) || linkRegex.test(title);
+              });
+
+              if (hasLinkedPR) {
+                console.log(`   ✅ Active: Issue #${issueNum} has a linked Pull Request.`);
+                continue;
+              }
+
+              // Find assignment timestamp from issue timeline events
+              let assignedAt = new Date(issue.created_at);
+              try {
+                const events = await github.rest.issues.listEvents({
+                  owner,
+                  repo,
+                  issue_number: issueNum,
+                  per_page: 50
+                });
+                const assignEvents = events.data.filter(e => e.event === 'assigned');
+                if (assignEvents.length > 0) {
+                  const lastAssignEvent = assignEvents[assignEvents.length - 1];
+                  assignedAt = new Date(lastAssignEvent.created_at);
+                }
+              } catch (e) {
+                console.warn(`Could not fetch events for #${issueNum}:`, e.message);
+              }
+
+              const elapsedMs = now.getTime() - assignedAt.getTime();
+              const elapsedDays = elapsedMs / (1000 * 60 * 60 * 24);
+              console.log(`   ⏳ Days since assignment: ${elapsedDays.toFixed(1)} days.`);
+
+              // Fetch existing comments to prevent duplicate warning messages
+              const comments = await github.rest.issues.listComments({
+                owner,
+                repo,
+                issue_number: issueNum,
+                per_page: 50
+              });
+              const commentBodies = comments.data.map(c => c.body || "");
+
+              // ── DAY 7+: AUTO-UNASSIGN ─────────────────────────────────
+              if (elapsedDays >= 7) {
+                console.log(`   🚨 Unassigning inactive contributors from Issue #${issueNum}...`);
+
+                // Remove assignees
+                await github.rest.issues.removeAssignees({
+                  owner,
+                  repo,
+                  issue_number: issueNum,
+                  assignees
+                });
+
+                // Update labels: remove 'assigned', add 'help wanted'
+                try {
+                  await github.rest.issues.removeLabel({
+                    owner,
+                    repo,
+                    issue_number: issueNum,
+                    name: 'assigned'
+                  });
+                } catch {}
+
+                try {
+                  await github.rest.issues.addLabels({
+                    owner,
+                    repo,
+                    issue_number: issueNum,
+                    labels: ['help wanted']
+                  });
+                } catch {}
+
+                // Post unassign notification comment
+                const unassignComment = `### ⏳ NSoC 2026: Assignment Window Expired\n\n` +
+                  `@${assignees.join(', @')} has been automatically unassigned from this issue due to **7 days of inactivity without a linked Pull Request**.\n\n` +
+                  `Per **Nexus Spring of Code (NSoC'26)** guidelines, issues must remain accessible to active developers.\n\n` +
+                  `---\n` +
+                  `🌟 **This issue is now available for other contributors!**\n` +
+                  `*Comment \`/assign\` below to take on this task!* 🚀`;
+
+                await github.rest.issues.createComment({
+                  owner,
+                  repo,
+                  issue_number: issueNum,
+                  body: unassignComment
+                });
+
+                console.log(`   ✅ Successfully unassigned Issue #${issueNum} and reopened for others.`);
+              }
+              // ── DAY 5 - 7: GENTLE 48-HOUR DEADLINE WARNING ─────────────
+              else if (elapsedDays >= 5) {
+                const warningHeader = "### ⏰ NSoC 2026: 48-Hour Inactivity Notice";
+                const alreadyWarned = commentBodies.some(b => b.includes(warningHeader));
+
+                if (!alreadyWarned) {
+                  console.log(`   ⚠️ Sending 48-hour reminder on Issue #${issueNum}...`);
+                  const warningComment = `${warningHeader}\n\n` +
+                    `Hi @${assignees.join(', @')}! 👋\n\n` +
+                    `This issue was assigned to you **5 days ago**, and no linked Pull Request has been detected yet.\n\n` +
+                    `- **Deadline:** You have **48 hours left** to open a draft or ready PR linking this issue (\`Closes #${issueNum}\`).\n` +
+                    `- If no PR is opened by **Day 7**, this issue will be automatically released back to the community.\n\n` +
+                    `*If you are blocked or need help, please leave a comment here!* 🚀`;
+
+                  await github.rest.issues.createComment({
+                    owner,
+                    repo,
+                    issue_number: issueNum,
+                    body: warningComment
+                  });
+                } else {
+                  console.log(`   ℹ️ Issue #${issueNum} already received 48-hour warning.`);
+                }
+              }
+            }
+
+            console.log("\n🎉 Ghost Contributor Shield audit complete!");

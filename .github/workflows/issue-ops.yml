@@ -37,15 +37,40 @@ jobs:
               const issue = context.payload.issue;
               console.log(`New issue #${issue.number} opened by @${issue.user.login}`);
 
-              // Ensure mandatory 'nsoc26' label is present
+              // Ensure mandatory 'nsoc26' and component labels are present
               const currentLabels = issue.labels.map(l => (typeof l === 'string' ? l : l.name).toLowerCase());
-              if (!currentLabels.includes('nsoc26')) {
+              const issueTitle = (issue.title || "").toLowerCase();
+              const autoLabels = ['nsoc26'];
+
+              if (issueTitle.includes('[ui/ux]') || issueTitle.includes('ui/ux')) {
+                autoLabels.push('ui/ux', 'frontend');
+              } else if (issueTitle.includes('[frontend]') || issueTitle.includes('frontend')) {
+                autoLabels.push('frontend');
+              } else if (issueTitle.includes('[backend]') || issueTitle.includes('backend')) {
+                autoLabels.push('backend');
+              }
+
+              if (issueTitle.includes('[bug]') || issueTitle.includes('fix:')) {
+                autoLabels.push('bug');
+              } else if (issueTitle.includes('[feat]') || issueTitle.includes('feature:')) {
+                autoLabels.push('feature');
+              } else if (issueTitle.includes('[docs]') || issueTitle.includes('[documentation]')) {
+                autoLabels.push('documentation');
+              } else if (issueTitle.includes('[test]')) {
+                autoLabels.push('testing');
+              } else if (issueTitle.includes('[a11y]') || issueTitle.includes('accessibility')) {
+                autoLabels.push('accessibility');
+              }
+
+              const labelsToApply = autoLabels.filter(lbl => !currentLabels.includes(lbl));
+              if (labelsToApply.length > 0) {
                 await github.rest.issues.addLabels({
                   owner,
                   repo,
                   issue_number: issue.number,
-                  labels: ['nsoc26']
+                  labels: labelsToApply
                 });
+                console.log(`Auto-applied labels: [${labelsToApply.join(', ')}]`);
               }
 
               // Post informative welcome & assignment instruction comment
