@@ -1,3 +1,4 @@
+import { describe, it, expect, beforeEach } from "vitest";
 import {
   DEFAULT_PREFERENCES,
   DEFAULT_APPEARANCE_PREFERENCES,
@@ -8,132 +9,107 @@ import {
   type UserPreferences,
 } from "./use-settings";
 
-async function runTests() {
-  console.log("🧪 Running unit tests for persistent settings & preferences...\n");
-
-  let passed = 0;
-  let failed = 0;
-
-  function assert(condition: boolean, testName: string) {
-    if (condition) {
-      console.log(`✅ PASS: ${testName}`);
-      passed++;
-    } else {
-      console.error(`❌ FAIL: ${testName}`);
-      failed++;
-    }
-  }
-
-  // Mock in-memory localStorage for Node test environment
+describe("Persistent Settings & Preferences", () => {
   const mockStorage: Record<string, string> = {};
-  (global as any).localStorage = {
-    getItem: (key: string) => mockStorage[key] || null,
-    setItem: (key: string, val: string) => {
-      mockStorage[key] = val;
-    },
-    removeItem: (key: string) => {
+
+  beforeEach(() => {
+    for (const key in mockStorage) {
       delete mockStorage[key];
-    },
-    clear: () => {
-      for (const k in mockStorage) delete mockStorage[k];
-    },
-  };
-  (global as any).window = {};
+    }
 
-  // 1. Verify Default Preferences structure
-  assert(DEFAULT_PREFERENCES !== null, "DEFAULT_PREFERENCES is defined");
-  assert(DEFAULT_PREFERENCES.appearance.theme === "dark", "Default theme is dark");
-  assert(DEFAULT_PREFERENCES.appearance.accentColor === "purple", "Default accent is purple");
-  assert(DEFAULT_PREFERENCES.appearance.compactTableView === false, "Compact table view is false by default");
-  assert(DEFAULT_PREFERENCES.appearance.reducedMotion === false, "Reduced motion is false by default");
-  assert(DEFAULT_PREFERENCES.appearance.defaultLandingTab === "dashboard", "Default landing tab is dashboard");
+    (global as any).localStorage = {
+      getItem: (key: string) => mockStorage[key] || null,
+      setItem: (key: string, val: string) => {
+        mockStorage[key] = val;
+      },
+      removeItem: (key: string) => {
+        delete mockStorage[key];
+      },
+      clear: () => {
+        for (const k in mockStorage) delete mockStorage[k];
+      },
+    };
+    (global as any).window = {};
+  });
 
-  assert(DEFAULT_PREFERENCES.notifications.battleChallenges === true, "Battle challenges alert is true by default");
-  assert(DEFAULT_PREFERENCES.notifications.weeklyDigest === true, "Weekly digest is true by default");
-  assert(DEFAULT_PREFERENCES.notifications.achievementUnlocks === true, "Achievement unlocks is true by default");
-  assert(DEFAULT_PREFERENCES.notifications.leaderboardUpdates === false, "Leaderboard updates is false by default");
-  assert(DEFAULT_PREFERENCES.notifications.challengeReminders === true, "Challenge reminders is true by default");
-  assert(DEFAULT_PREFERENCES.notifications.productUpdates === true, "Product updates is true by default");
+  it("should have correct default appearance preferences", () => {
+    expect(DEFAULT_PREFERENCES).toBeDefined();
+    expect(DEFAULT_PREFERENCES.appearance.theme).toBe("dark");
+    expect(DEFAULT_PREFERENCES.appearance.accentColor).toBe("purple");
+    expect(DEFAULT_PREFERENCES.appearance.compactTableView).toBe(false);
+    expect(DEFAULT_PREFERENCES.appearance.reducedMotion).toBe(false);
+    expect(DEFAULT_PREFERENCES.appearance.defaultLandingTab).toBe("dashboard");
+  });
 
-  // 2. Test loadLocalPreferences with empty storage
-  localStorage.clear();
-  const loadedDefault = loadLocalPreferences();
-  assert(
-    loadedDefault.appearance.theme === "dark",
-    "loadLocalPreferences returns default theme when storage is empty"
-  );
-  assert(
-    loadedDefault.notifications.battleChallenges === true,
-    "loadLocalPreferences returns default notifications when storage is empty"
-  );
+  it("should have correct default notification preferences", () => {
+    expect(DEFAULT_PREFERENCES.notifications.battleChallenges).toBe(true);
+    expect(DEFAULT_PREFERENCES.notifications.weeklyDigest).toBe(true);
+    expect(DEFAULT_PREFERENCES.notifications.achievementUnlocks).toBe(true);
+    expect(DEFAULT_PREFERENCES.notifications.leaderboardUpdates).toBe(false);
+    expect(DEFAULT_PREFERENCES.notifications.challengeReminders).toBe(true);
+    expect(DEFAULT_PREFERENCES.notifications.productUpdates).toBe(true);
+  });
 
-  // 3. Test saveLocalPreferences and persistence
-  const customPrefs: UserPreferences = {
-    appearance: {
-      theme: "light",
-      accentColor: "emerald",
-      compactTableView: true,
-      reducedMotion: true,
-      defaultLandingTab: "battles",
-    },
-    notifications: {
-      battleChallenges: false,
-      weeklyDigest: false,
-      achievementUnlocks: true,
-      leaderboardUpdates: true,
-      challengeReminders: false,
-      productUpdates: false,
-    },
-  };
+  it("should return defaults when localStorage is empty", () => {
+    const loaded = loadLocalPreferences();
+    expect(loaded.appearance.theme).toBe("dark");
+    expect(loaded.notifications.battleChallenges).toBe(true);
+  });
 
-  saveLocalPreferences(customPrefs);
-  const reloaded = loadLocalPreferences();
+  it("should save and reload custom preferences correctly", () => {
+    const customPrefs: UserPreferences = {
+      appearance: {
+        theme: "light",
+        accentColor: "emerald",
+        compactTableView: true,
+        reducedMotion: true,
+        defaultLandingTab: "battles",
+      },
+      notifications: {
+        battleChallenges: false,
+        weeklyDigest: false,
+        achievementUnlocks: true,
+        leaderboardUpdates: true,
+        challengeReminders: false,
+        productUpdates: false,
+      },
+    };
 
-  assert(reloaded.appearance.theme === "light", "Persisted theme is light");
-  assert(reloaded.appearance.accentColor === "emerald", "Persisted accent color is emerald");
-  assert(reloaded.appearance.compactTableView === true, "Persisted compactTableView is true");
-  assert(reloaded.appearance.reducedMotion === true, "Persisted reducedMotion is true");
-  assert(reloaded.appearance.defaultLandingTab === "battles", "Persisted defaultLandingTab is battles");
+    saveLocalPreferences(customPrefs);
+    const reloaded = loadLocalPreferences();
 
-  assert(reloaded.notifications.battleChallenges === false, "Persisted battleChallenges is false");
-  assert(reloaded.notifications.weeklyDigest === false, "Persisted weeklyDigest is false");
-  assert(reloaded.notifications.leaderboardUpdates === true, "Persisted leaderboardUpdates is true");
+    expect(reloaded.appearance.theme).toBe("light");
+    expect(reloaded.appearance.accentColor).toBe("emerald");
+    expect(reloaded.appearance.compactTableView).toBe(true);
+    expect(reloaded.appearance.reducedMotion).toBe(true);
+    expect(reloaded.appearance.defaultLandingTab).toBe("battles");
 
-  // 4. Test partial data recovery / safe merging
-  localStorage.setItem(
-    SETTINGS_STORAGE_KEY,
-    JSON.stringify({
-      appearance: { compactTableView: true },
-      notifications: { weeklyDigest: false },
-    })
-  );
+    expect(reloaded.notifications.battleChallenges).toBe(false);
+    expect(reloaded.notifications.weeklyDigest).toBe(false);
+    expect(reloaded.notifications.leaderboardUpdates).toBe(true);
+  });
 
-  const merged = loadLocalPreferences();
-  assert(merged.appearance.compactTableView === true, "Preserves custom compactTableView");
-  assert(merged.appearance.theme === "dark", "Fills in missing appearance.theme with default");
-  assert(merged.appearance.defaultLandingTab === "dashboard", "Fills in missing landing tab with default");
-  assert(merged.notifications.weeklyDigest === false, "Preserves custom weeklyDigest");
-  assert(merged.notifications.battleChallenges === true, "Fills in missing battleChallenges with default");
+  it("should safely merge partial data with defaults", () => {
+    localStorage.setItem(
+      SETTINGS_STORAGE_KEY,
+      JSON.stringify({
+        appearance: { compactTableView: true },
+        notifications: { weeklyDigest: false },
+      })
+    );
 
-  // 5. Test resilience to corrupted JSON
-  localStorage.setItem(SETTINGS_STORAGE_KEY, "invalid-json-{{{");
-  const fallbackFromCorrupt = loadLocalPreferences();
-  assert(
-    fallbackFromCorrupt.appearance.theme === "dark",
-    "Gracefully recovers from corrupted JSON in localStorage"
-  );
+    const merged = loadLocalPreferences();
+    expect(merged.appearance.compactTableView).toBe(true);
+    expect(merged.appearance.theme).toBe("dark");
+    expect(merged.appearance.defaultLandingTab).toBe("dashboard");
+    expect(merged.notifications.weeklyDigest).toBe(false);
+    expect(merged.notifications.battleChallenges).toBe(true);
+  });
 
-  console.log(`\n========================================`);
-  console.log(`Summary: ${passed} passed, ${failed} failed`);
-  console.log(`========================================\n`);
-
-  if (failed > 0) {
-    process.exit(1);
-  }
-}
-
-runTests().catch((err) => {
-  console.error("Test execution failed:", err);
-  process.exit(1);
+  it("should gracefully recover from corrupted JSON in localStorage", () => {
+    localStorage.setItem(SETTINGS_STORAGE_KEY, "invalid-json-{{{");
+    const fallback = loadLocalPreferences();
+    expect(fallback.appearance.theme).toBe("dark");
+    expect(fallback.appearance.defaultLandingTab).toBe("dashboard");
+  });
 });
-
