@@ -192,7 +192,7 @@ export function ContributionHeatmap({ className, data = [] }: ContributionHeatma
       {/* Background Ambience */}
       <div className={cn("absolute top-0 right-0 w-[400px] h-[400px] rounded-full blur-[80px] pointer-events-none transition-colors duration-1000", palette.ambience)} />
 
-      <div className="flex items-center justify-between gap-4 mb-8 relative z-10">
+      <div className="flex flex-col items-start gap-4 mb-8 relative z-10 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h3 className="text-2xl font-bold text-white flex items-center gap-3">
             <div className={cn("p-2 rounded-xl border", palette.iconWrap)}>
