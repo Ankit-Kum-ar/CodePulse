@@ -114,7 +114,7 @@ describe('GithubService', () => {
         GITHUB_CACHE_TTL.DEVELOPER,
       );
       expect(result.cached).toBe(false);
-      expect(result.username).toBe('testuser');
+      expect(result).toMatchObject({ username: 'testuser' });
     });
 
     it('should evict cache and fetch fresh when forceRefresh is true', async () => {
@@ -228,6 +228,11 @@ describe('GithubService', () => {
         expect(err.getStatus()).toBe(HttpStatus.TOO_MANY_REQUESTS);
       }
     });
+  });
+  it('propagates event failures for strict sync callers while keeping proxy fallback behavior', async () => {
+    mockedAxios.get.mockRejectedValue(new Error('offline'));
+    await expect(service.fetchUserEvents('owner', 'token', 30, true)).rejects.toThrow('offline');
+    await expect(service.fetchUserEvents('owner', 'token')).resolves.toEqual([]);
   });
 });
 
