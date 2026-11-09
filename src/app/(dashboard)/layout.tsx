@@ -5,6 +5,7 @@ import { motion } from "motion/react";
 import { cn } from "@/lib/utils";
 import { Sidebar } from "@/components/layout/sidebar";
 import { Topbar } from "@/components/layout/topbar";
+import { DashboardBreadcrumbs } from "@/components/layout/breadcrumbs";
 import { CommandPalette } from "@/components/layout/command-palette";
 import { PageTransition } from "@/components/animations/page-transition";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -34,6 +35,7 @@ export default function DashboardLayout({
 
         {/* Page content */}
         <main className="flex-1 px-4 py-6 md:px-6 lg:px-8">
+          <DashboardBreadcrumbs />
           <PageTransition>{children}</PageTransition>
         </main>
       </motion.div>
