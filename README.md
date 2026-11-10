@@ -30,7 +30,7 @@ A heartfelt thank you to all the amazing developers contributing to **CodePulse*
         <sub><b>@code-with-abhi-i5</b></sub>
       </a><br />
       <sub>👑 Maintainer</sub><br />
-      <a href="https://github.com/code-with-abhi-i5/CodePulse/commits?author=code-with-abhi-i5"><sub>🔨 67 commits</sub></a>
+      <a href="https://github.com/code-with-abhi-i5/CodePulse/commits?author=code-with-abhi-i5"><sub>🔨 70 commits</sub></a>
     </td>
     <td align="center" width="160px">
       <a href="https://github.com/Babin123456">
@@ -57,6 +57,14 @@ A heartfelt thank you to all the amazing developers contributing to **CodePulse*
       <a href="https://github.com/code-with-abhi-i5/CodePulse/commits?author=bhavyasingh-sa"><sub>🔨 3 commits</sub></a>
     </td>
     <td align="center" width="160px">
+      <a href="https://github.com/aush5895">
+        <img src="https://avatars.githubusercontent.com/u/229103100?v=4&s=100" width="80px" style="border-radius: 50%;" alt="aush5895" /><br />
+        <sub><b>@aush5895</b></sub>
+      </a><br />
+      <sub>💻 Contributor</sub><br />
+      <a href="https://github.com/code-with-abhi-i5/CodePulse/commits?author=aush5895"><sub>🔨 2 commits</sub></a>
+    </td>
+    <td align="center" width="160px">
       <a href="https://github.com/Sarbajit-Sengupta">
         <img src="https://avatars.githubusercontent.com/u/73594751?v=4&s=100" width="80px" style="border-radius: 50%;" alt="Sarbajit-Sengupta" /><br />
         <sub><b>@Sarbajit-Sengupta</b></sub>
@@ -64,6 +72,8 @@ A heartfelt thank you to all the amazing developers contributing to **CodePulse*
       <sub>💻 Contributor</sub><br />
       <a href="https://github.com/code-with-abhi-i5/CodePulse/commits?author=Sarbajit-Sengupta"><sub>🔨 2 commits</sub></a>
     </td>
+  </tr>
+  <tr>
     <td align="center" width="160px">
       <a href="https://github.com/tesfa27">
         <img src="https://avatars.githubusercontent.com/u/120743554?v=4&s=100" width="80px" style="border-radius: 50%;" alt="tesfa27" /><br />
@@ -71,6 +81,14 @@ A heartfelt thank you to all the amazing developers contributing to **CodePulse*
       </a><br />
       <sub>💻 Contributor</sub><br />
       <a href="https://github.com/code-with-abhi-i5/CodePulse/commits?author=tesfa27"><sub>🔨 1 commits</sub></a>
+    </td>
+    <td align="center" width="160px">
+      <a href="https://github.com/yash-kumawat-0">
+        <img src="https://avatars.githubusercontent.com/u/191586321?v=4&s=100" width="80px" style="border-radius: 50%;" alt="yash-kumawat-0" /><br />
+        <sub><b>@yash-kumawat-0</b></sub>
+      </a><br />
+      <sub>💻 Contributor</sub><br />
+      <a href="https://github.com/code-with-abhi-i5/CodePulse/commits?author=yash-kumawat-0"><sub>🔨 1 commits</sub></a>
     </td>
   </tr>
 </table>
