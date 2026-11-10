@@ -10,10 +10,13 @@ datasource db {
 
 model User {
   id                  String            @id @default(uuid())
-  githubId            String            @unique
+  githubId            String?           @unique
   username            String            @unique
   name                String?
   email               String?
+  authEmail           String?           @unique
+  passwordHash        String?
+  interests           String[]           @default([])
   avatar              String?
   bio                 String?
   location            String?
@@ -39,8 +42,22 @@ model User {
   achievements        UserAchievement[]
   badges              UserBadge[]
   challenges          UserChallenge[]
+  passwordResetTokens PasswordResetToken[]
 
   @@map("users")
+}
+
+model PasswordResetToken {
+  id        String    @id @default(uuid())
+  userId    String
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, expiresAt])
+  @@map("password_reset_tokens")
 }
 
 model Follows {
